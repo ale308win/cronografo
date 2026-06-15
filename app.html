@@ -6,7 +6,7 @@
 <title>Cronógrafo · @ale308win</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx-js-style.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ── RESET + VARS ── */
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1148,73 +1148,73 @@ function clearVel() {
 ══════════════════════════════════════════ */
 function exportExcel() {
   if (typeof XLSX === 'undefined') { toast('XLSX não carregado. Verifique sua conexão.', true); return; }
-  const ST = {
-    title:{font:{bold:true,sz:16,color:{rgb:'C09A3A'},name:'Calibri'},fill:{fgColor:{rgb:'0B0B0F'}},alignment:{horizontal:'center'}},
-    sec:{font:{bold:true,sz:12,color:{rgb:'C09A3A'},name:'Calibri'},fill:{fgColor:{rgb:'161622'}},border:{bottom:{style:'medium',color:{rgb:'8B7332'}}}},
-    hdr:{font:{bold:true,sz:10,color:{rgb:'FFFFFF'},name:'Calibri'},fill:{fgColor:{rgb:'1E1E2E'}},alignment:{horizontal:'center'}},
-    key:{font:{bold:true,sz:10,color:{rgb:'AAAAAA'},name:'Calibri'},fill:{fgColor:{rgb:'13131A'}},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
-    val:{font:{sz:10,name:'Calibri'},fill:{fgColor:{rgb:'0E0E18'}},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
-    num:{font:{bold:true,sz:13,color:{rgb:'D4B050'},name:'Calibri'},fill:{fgColor:{rgb:'0E0E18'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
-    ex:{font:{bold:true,sz:10,color:{rgb:'81C784'},name:'Calibri'},fill:{fgColor:{rgb:'162016'}},alignment:{horizontal:'center'}},
-    go:{font:{bold:true,sz:10,color:{rgb:'AED581'},name:'Calibri'},fill:{fgColor:{rgb:'1A2210'}},alignment:{horizontal:'center'}},
-    ac:{font:{bold:true,sz:10,color:{rgb:'FFD54F'},name:'Calibri'},fill:{fgColor:{rgb:'1F1B07'}},alignment:{horizontal:'center'}},
-    po:{font:{bold:true,sz:10,color:{rgb:'FFB74D'},name:'Calibri'},fill:{fgColor:{rgb:'1F1007'}},alignment:{horizontal:'center'}},
-    cr:{font:{bold:true,sz:10,color:{rgb:'EF9A9A'},name:'Calibri'},fill:{fgColor:{rgb:'200808'}},alignment:{horizontal:'center'}},
-  };
-  const c = (v,s) => ({v:v,t:'s',s:s||{}}), n = (v,s) => ({v:v||0,t:'n',s:s||ST.num});
+  const s = v => v == null ? '' : String(v);
   const rows = [];
   const R = (...cells) => rows.push(cells);
-  const B = () => rows.push([]);
+  const B = () => rows.push(['']);
 
-  R(c('REGISTRO E ANÁLISE DE DADOS DE CRONÓGRAFO',ST.title));
-  R(c('@ale308win — instagram.com/ale308win',{font:{sz:10,color:{rgb:'888880'},name:'Calibri'},fill:{fgColor:{rgb:'0B0B0F'}},alignment:{horizontal:'center'}}));
+  R(['REGISTRO E ANÁLISE DE DADOS DE CRONÓGRAFO — @ale308win']);
   B();
-  R(c('IDENTIFICAÇÃO',ST.sec));
-  R(c('Data',ST.key),c(fv('f_data'),ST.val),c('Atirador',ST.key),c(fv('f_atirador'),ST.val));
-  R(c('Calibre',ST.key),c(fv('f_calibre'),ST.val),c('Distância ao Crono',ST.key),c(fv('f_distancia'),ST.val));
+  R(['IDENTIFICAÇÃO']);
+  R(['Data', fv('f_data'), 'Atirador', fv('f_atirador')]);
+  R(['Calibre', fv('f_calibre'), 'Distância ao Crono', fv('f_distancia')]);
   B();
-  R(c('EQUIPAMENTO & CONDIÇÕES',ST.sec));
-  R(c('Tipo',ST.key),c(fv('f_tipo'),ST.val),c('Modelo',ST.key),c(fv('f_modelo'),ST.val));
-  R(c('Clima',ST.key),c(fv('f_clima'),ST.val),c('Temperatura',ST.key),c(fv('f_temp'),ST.val));
-  R(c('Cidade',ST.key),c(fv('f_cidade'),ST.val),c('Estado',ST.key),c(fv('f_estado'),ST.val));
-  R(c('Clube',ST.key),c(fv('f_clube'),ST.val));
+  R(['EQUIPAMENTO & CONDIÇÕES']);
+  R(['Tipo', fv('f_tipo'), 'Modelo', fv('f_modelo')]);
+  R(['Fabricante', fv('f_fab'), 'Cano', fv('f_cano')]);
+  R(['Clima', fv('f_clima'), 'Temperatura (°C)', fv('f_temp')]);
+  R(['Umidade (%)', fv('f_umid'), 'Altitude (m)', fv('f_alt')]);
+  R(['Cidade', fv('f_cidade'), 'Estado', fv('f_estado')]);
+  R(['Clube', fv('f_clube'), 'Cronógrafo', fv('f_crono')]);
+  R(['Marcas espoleta', fv('f_sobre'), 'Extração', fv('f_extra')]);
   B();
-  R(c('COMPONENTES',ST.sec));
-  R(c('Componente',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
-  COMP_ROWS.forEach(r => R(c(r.lbl,ST.key),c(fv(`c1_${r.id}`),ST.val),c(fv(`c2_${r.id}`),ST.val),c(fv(`c3_${r.id}`),ST.val),c(fv(`c4_${r.id}`),ST.val)));
+  R(['COMPONENTES', 'CARGA 1', 'CARGA 2', 'CARGA 3', 'CARGA 4']);
+  COMP_ROWS.forEach(r => R([r.lbl, fv(`c1_${r.id}`), fv(`c2_${r.id}`), fv(`c3_${r.id}`), fv(`c4_${r.id}`)]));
   B();
-  R(c('VELOCIDADES (fps)',ST.sec));
-  R(c('Sessão',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
-  for (let i=1;i<=10;i++) {
-    const cells=[c(`Sessão ${i}`,ST.key)];
-    for (let s=1;s<=4;s++) { const el=document.getElementById(`v${s}_${i}`); cells.push(el&&el.value?n(+el.value):c('—',ST.val)); }
-    rows.push(cells);
+  R(['VELOCIDADES (fps)', 'CARGA 1', 'CARGA 2', 'CARGA 3', 'CARGA 4']);
+  for (let i = 1; i <= 10; i++) {
+    const row = [`Sessão ${i}`];
+    for (let s2 = 1; s2 <= 4; s2++) {
+      const el = document.getElementById(`v${s2}_${i}`);
+      row.push(el && el.value ? +el.value : '');
+    }
+    rows.push(row);
   }
   B();
-  R(c('RESULTADOS',ST.sec));
-  R(c('Métrica',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
+  R(['RESULTADOS', 'CARGA 1', 'CARGA 2', 'CARGA 3', 'CARGA 4']);
   const SR = [];
-  for (let s=1;s<=4;s++) { const v=getVels(s),g=fv(`c${s}_proj_peso`); if(v.length){const A=avg(v),SD=sdCalc(v),ES=hiV(v)-loV(v),ESP=ES/A*100,E=calcE(A,g); SR[s]={n:v.length,A:Math.round(A),ms:+fps2ms(A).toFixed(1),H:hiV(v),L:loV(v),ES,ESP:+ESP.toFixed(2),SD:+SD.toFixed(1),E:E!==null?Math.round(E):'',sdB:sdBadge(SD),espB:esPctBadge(ESP),esB:esBadge(ES)};}else SR[s]=null;}
-  const nv = s => SR[s]?n(SR[s].n):c('—',ST.val);
-  R(c('Válidos (n)',ST.key),nv(1),nv(2),nv(3),nv(4));
-  (['A','ms','H','L','ES','ESP','SD']).forEach(k => { const lk={A:'AVG (fps)',ms:'AVG (m/s)',H:'HI (fps)',L:'LO (fps)',ES:'ES (fps)',ESP:'ES%',SD:'SD (fps)'}[k]; rows.push([c(lk,ST.key),...[1,2,3,4].map(s=>SR[s]?n(SR[s][k]):c('—',ST.val))]); });
-  // SD rating row
-  rows.push([c('SD Classificação',ST.key),...[1,2,3,4].map(s=>SR[s]?c(SR[s].sdB[1],ST[SR[s].sdB[0].replace('bg-','')]):c('—',ST.val))]);
-  rows.push([c('Energia (J)',ST.key),...[1,2,3,4].map(s=>SR[s]&&SR[s].E!==''?n(SR[s].E):c('—',ST.val))]);
+  for (let s2 = 1; s2 <= 4; s2++) {
+    const v = getVels(s2), g = fv(`c${s2}_proj_peso`);
+    if (v.length) {
+      const A = avg(v), SD = sdCalc(v), ES = hiV(v) - loV(v), ESP = ES / A * 100, E = calcE(A, g);
+      SR[s2] = { n: v.length, A: Math.round(A), ms: +fps2ms(A).toFixed(1), H: hiV(v), L: loV(v), ES, ESP: +ESP.toFixed(2), SD: +SD.toFixed(1), E: E !== null ? Math.round(E) : '', sdLbl: sdBadge(SD)[1] };
+    } else SR[s2] = null;
+  }
+  const cell = (s2, k) => SR[s2] ? SR[s2][k] : '—';
+  R(['Válidos (n)',     cell(1,'n'),   cell(2,'n'),   cell(3,'n'),   cell(4,'n')]);
+  R(['AVG (fps)',       cell(1,'A'),   cell(2,'A'),   cell(3,'A'),   cell(4,'A')]);
+  R(['AVG (m/s)',       cell(1,'ms'),  cell(2,'ms'),  cell(3,'ms'),  cell(4,'ms')]);
+  R(['HI (fps)',        cell(1,'H'),   cell(2,'H'),   cell(3,'H'),   cell(4,'H')]);
+  R(['LO (fps)',        cell(1,'L'),   cell(2,'L'),   cell(3,'L'),   cell(4,'L')]);
+  R(['ES (fps)',        cell(1,'ES'),  cell(2,'ES'),  cell(3,'ES'),  cell(4,'ES')]);
+  R(['ES%',            cell(1,'ESP'), cell(2,'ESP'), cell(3,'ESP'), cell(4,'ESP')]);
+  R(['SD (fps)',        cell(1,'SD'),  cell(2,'SD'),  cell(3,'SD'),  cell(4,'SD')]);
+  R(['SD Classificação',cell(1,'sdLbl'),cell(2,'sdLbl'),cell(3,'sdLbl'),cell(4,'sdLbl')]);
+  R(['Energia (J)',     cell(1,'E'),   cell(2,'E'),   cell(3,'E'),   cell(4,'E')]);
   B();
-  R(c('OBSERVAÇÕES',ST.sec));
-  R(c('Prensa',ST.key),c(fv('f_prensa'),ST.val),c('Dies',ST.key),c(fv('f_dies'),ST.val));
-  R(c('Notas',ST.key),c(fv('f_obs'),{...ST.val,alignment:{wrapText:true}}));
+  R(['OBSERVAÇÕES']);
+  R(['Prensa', fv('f_prensa'), 'Dies', fv('f_dies')]);
+  R(['Redimensionamento', fv('f_redim'), 'Condição estojos', fv('f_econd')]);
+  R(['Notas', fv('f_obs')]);
   B();
-  R(c('⚠ Dados de referência. Confirme com o manual do fabricante. Responsabilidade exclusiva do recarregador. @ale308win',{font:{italic:true,sz:9,color:{rgb:'888880'},name:'Calibri'},fill:{fgColor:{rgb:'0D0D14'}},alignment:{wrapText:true}}));
+  R(['⚠ Dados de referência. Confirme com o manual do fabricante. Responsabilidade exclusiva do recarregador. @ale308win']);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols']=[{wch:26},{wch:14},{wch:14},{wch:14},{wch:14}];
-  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}},{s:{r:1,c:0},e:{r:1,c:4}}];
+  ws['!cols'] = [{wch:26},{wch:14},{wch:14},{wch:14},{wch:14}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Registro');
-  const atirador = (fv('f_atirador')||'registro').replace(/\s+/g,'_');
-  const data = (fv('f_data')||new Date().toLocaleDateString('pt-BR')).replace(/\//g,'-');
+  const atirador = (fv('f_atirador') || 'registro').replace(/\s+/g, '_');
+  const data = (fv('f_data') || new Date().toLocaleDateString('pt-BR')).replace(/\//g, '-');
   XLSX.writeFile(wb, `cronografo_${atirador}_${data}.xlsx`);
 }
 
