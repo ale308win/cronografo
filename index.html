@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronógrafo · @ale308win</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0b0f;--bg2:#101018;--bg3:#161622;--bg4:#1e1e2e;
+  --gold:#c09a3a;--gold-l:#d4b050;--gold-d:#8b7332;
+  --text:#ddd8c4;--text2:#999887;
+  --border:#2a2a3a;--border2:#383850;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px}
+a{color:var(--gold);text-decoration:none}a:hover{color:var(--gold-l)}
+
+/* ── HERO ── */
+.lp-hero{position:fixed;inset:0;z-index:0;background:var(--bg2);overflow:hidden}
+.lp-hero::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 65%,rgba(192,154,58,.1) 0%,transparent 70%),
+    linear-gradient(160deg,#0a0a10 0%,#0e0e1a 50%,#12121f 100%);
+}
+.lp-hero::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 50px,rgba(192,154,58,.025) 50px,rgba(192,154,58,.025) 51px),
+    repeating-linear-gradient(90deg,transparent,transparent 50px,rgba(192,154,58,.025) 50px,rgba(192,154,58,.025) 51px);
+}
+.lp-bg-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;transition:opacity .5s}
+.lp-desktop{display:block}.lp-mobile{display:none}
+@media(max-width:768px){.lp-desktop{display:none}.lp-mobile{display:block}}
+.lp-veil{position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(180deg,rgba(11,11,15,.72) 0%,rgba(11,11,15,.60) 100%)}
+
+/* ── AUTH WRAP ── */
+.auth-wrap{
+  position:relative;z-index:4;
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;padding:30px 16px;
+}
+.auth-branding{text-align:center;margin-bottom:20px}
+.auth-icon{font-size:34px;display:block;margin-bottom:6px}
+.auth-brand-title{
+  font-family:'Oswald',sans-serif;font-size:22px;color:var(--gold);
+  letter-spacing:2px;text-transform:uppercase;
+}
+.auth-brand-sub{font-size:12px;color:var(--text2);margin-top:4px}
+
+/* ── CARD ── */
+.auth-card{
+  background:rgba(14,14,22,.93);border:1px solid var(--border2);border-radius:6px;
+  padding:28px 30px;width:100%;max-width:440px;
+  backdrop-filter:blur(14px);box-shadow:0 10px 50px rgba(0,0,0,.75);
+}
+
+/* ── TABS ── */
+.auth-tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:22px}
+.auth-tab{
+  flex:1;background:none;border:none;color:var(--text2);cursor:pointer;
+  font-family:'Oswald',sans-serif;font-size:13px;letter-spacing:2px;text-transform:uppercase;
+  padding:9px 0;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;
+}
+.auth-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.auth-tab:hover:not(.active){color:var(--text)}
+
+/* ── FIELDS ── */
+.fg{margin-bottom:12px}
+label{display:block;font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px}
+input[type="email"],input[type="password"],input[type="number"],input[type="text"],select{
+  width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:3px;
+  padding:8px 10px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;
+  transition:border-color .2s;
+}
+input:focus,select:focus{outline:none;border-color:var(--gold-d);background:#0d0d16}
+select{cursor:pointer}select option{background:var(--bg4)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ── CHECKBOX ── */
+.ck-row{display:flex;align-items:flex-start;gap:9px;margin-bottom:11px}
+.ck-row input[type="checkbox"]{
+  width:15px;height:15px;margin-top:2px;accent-color:var(--gold);
+  cursor:pointer;flex-shrink:0;
+}
+.ck-row .ck-lbl{font-size:11px;color:var(--text2);line-height:1.45}
+.ck-row .ck-lbl strong{color:var(--text)}
+
+/* ── DIVIDER ── */
+hr.div{border:none;border-top:1px solid var(--border);margin:16px 0}
+.div-lbl{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:10px;margin-top:-4px}
+
+/* ── BTN ── */
+.btn-auth{
+  width:100%;background:var(--gold);color:#000;border:none;border-radius:3px;
+  font-family:'Oswald',sans-serif;font-size:14px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+  padding:12px;cursor:pointer;margin-top:8px;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-auth:hover{background:var(--gold-l)}
+.btn-auth:disabled{background:#3a3a2a;color:#666;cursor:not-allowed}
+
+/* ── MESSAGES ── */
+.msg{padding:10px 14px;border-radius:3px;font-size:12px;margin-top:10px;line-height:1.5;display:none}
+.msg.show{display:block}
+.msg.err{background:rgba(198,40,40,.18);border:1px solid rgba(198,40,40,.4);color:#ef9a9a}
+.msg.ok{background:rgba(46,125,50,.18);border:1px solid rgba(46,125,50,.4);color:#81c784}
+.msg.info{background:rgba(192,154,58,.08);border:1px solid var(--border2);color:var(--text2)}
+
+/* ── SPINNER ── */
+.spin{
+  display:inline-block;width:13px;height:13px;
+  border:2px solid rgba(0,0,0,.25);border-top-color:#000;
+  border-radius:50%;animation:spin .55s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── FOOTER ── */
+.auth-footer{margin-top:14px;font-size:11px;color:var(--text2);text-align:center}
+</style>
+</head>
+<body>
+
+<!-- HERO BACKGROUND -->
+<div class="lp-hero">
+  <img class="lp-bg-img lp-desktop" src="crono_desktop.jpg" alt="" onerror="this.style.opacity='0'">
+  <img class="lp-bg-img lp-mobile"  src="crono_mobile.jpg"  alt="" onerror="this.style.opacity='0'">
+</div>
+<div class="lp-veil"></div>
+
+<!-- AUTH -->
+<div class="auth-wrap">
+  <div class="auth-branding">
+    <span class="auth-icon">🎯</span>
+    <div class="auth-brand-title">Cronógrafo · @ale308win</div>
+    <div class="auth-brand-sub">Registro &amp; Análise de Dados Balísticos</div>
+  </div>
+
+  <div class="auth-card">
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-in"  onclick="tab('in')">Entrar</button>
+      <button class="auth-tab"        id="tab-reg" onclick="tab('reg')">Criar Conta</button>
+    </div>
+
+    <!-- ── LOGIN ── -->
+    <div id="frm-in">
+      <div class="fg">
+        <label>E-mail</label>
+        <input type="email" id="l_email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="fg">
+        <label>Senha</label>
+        <input type="password" id="l_pass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn-auth" id="btn-in" onclick="doLogin()">ENTRAR</button>
+      <div class="msg" id="msg-in"></div>
+    </div>
+
+    <!-- ── REGISTRO ── -->
+    <div id="frm-reg" style="display:none">
+
+      <!-- Credenciais -->
+      <div class="fg">
+        <label>E-mail</label>
+        <input type="email" id="r_email" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="frow">
+        <div class="fg">
+          <label>Senha</label>
+          <input type="password" id="r_pass" placeholder="mín. 8 caracteres" autocomplete="new-password">
+        </div>
+        <div class="fg">
+          <label>Confirmar senha</label>
+          <input type="password" id="r_pass2" placeholder="repita" autocomplete="new-password">
+        </div>
+      </div>
+
+      <hr class="div">
+      <div class="div-lbl">Seu perfil</div>
+
+      <div class="frow">
+        <div class="fg">
+          <label>Nome completo</label>
+          <input type="text" id="r_name" placeholder="Ex: João Silva">
+        </div>
+        <div class="fg">
+          <label>Idade</label>
+          <input type="number" id="r_age" placeholder="Ex: 35" min="14" max="99">
+        </div>
+      </div>
+
+      <div class="fg">
+        <label>Tempo de prática no tiro</label>
+        <select id="r_exp">
+          <option value="">— selecione —</option>
+          <option>Menos de 1 ano</option>
+          <option>1 a 3 anos</option>
+          <option>3 a 5 anos</option>
+          <option>5 a 10 anos</option>
+          <option>Mais de 10 anos</option>
+          <option>Instrutor / profissional</option>
+        </select>
+      </div>
+
+      <div class="fg">
+        <label>Como conheceu esta ferramenta?</label>
+        <select id="r_how">
+          <option value="">— selecione —</option>
+          <option>Instagram @ale308win</option>
+          <option>Indicação de amigo</option>
+          <option>YouTube</option>
+          <option>Google / internet</option>
+          <option>Clube de tiro</option>
+          <option>Curso de recarga @ale308win</option>
+          <option>Outro</option>
+        </select>
+      </div>
+
+      <div class="ck-row">
+        <input type="checkbox" id="r_insta">
+        <span class="ck-lbl">Já sigo <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a> no Instagram</span>
+      </div>
+
+      <hr class="div">
+
+      <div class="ck-row">
+        <input type="checkbox" id="r_consent">
+        <span class="ck-lbl">
+          <strong>Autorizo o uso dos meus dados de recarga e cronógrafo</strong>
+          (sem identificação pessoal) para construção de uma base pública de recargas brasileiras,
+          conforme proposta do <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a>.
+          Esta autorização é <strong>obrigatória</strong> para uso da ferramenta.
+        </span>
+      </div>
+
+      <button class="btn-auth" id="btn-reg" onclick="doRegister()">CRIAR CONTA</button>
+      <div class="msg" id="msg-reg"></div>
+    </div>
+
+  </div><!-- /card -->
+
+  <div class="auth-footer">
+    Material de apoio ao curso de recarga ·
+    <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a>
+  </div>
+</div><!-- /auth-wrap -->
+
+<script>
+/* ══════════════════════════════════════════════════
+   ⚙ CONFIGURAÇÃO — substitua pelos valores do
+   seu projeto em supabase.com → Settings → API
+══════════════════════════════════════════════════ */
+const SUPA_URL = 'https://retjrajrouanbjzjbyxv.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldGpyYWpyb3VhbmJqempieXh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NDczNDEsImV4cCI6MjA5NzEyMzM0MX0.RTUkvrUy-7RhOvtMOPq-BY5vswUOwqtyZuaR1XagDuE';
+
+const { createClient } = supabase;
+const sb = createClient(SUPA_URL, SUPA_KEY);
+
+/* ── Redireciona se já logado ── */
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) window.location.href = 'app.html';
+})();
+
+/* ── Helpers ── */
+function tab(t) {
+  document.getElementById('frm-in').style.display  = t === 'in'  ? '' : 'none';
+  document.getElementById('frm-reg').style.display = t === 'reg' ? '' : 'none';
+  document.getElementById('tab-in').classList.toggle('active',  t === 'in');
+  document.getElementById('tab-reg').classList.toggle('active', t === 'reg');
+}
+
+function msg(id, type, html) {
+  const el = document.getElementById(id);
+  el.className = `msg ${type} show`;
+  el.innerHTML = html;
+}
+function noMsg(id) { document.getElementById(id).className = 'msg'; }
+
+function setBtn(id, loading, txt) {
+  const b = document.getElementById(id);
+  b.disabled = loading;
+  b.innerHTML = loading ? `<span class="spin"></span>${txt}` : txt;
+}
+
+/* ── LOGIN ── */
+async function doLogin() {
+  const email = document.getElementById('l_email').value.trim();
+  const pass  = document.getElementById('l_pass').value;
+  if (!email || !pass) { msg('msg-in', 'err', 'Preencha e-mail e senha.'); return; }
+  noMsg('msg-in');
+  setBtn('btn-in', true, 'Entrando...');
+  const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+  if (error) {
+    msg('msg-in', 'err', error.message.includes('Invalid') ? 'E-mail ou senha incorretos.' : error.message);
+    setBtn('btn-in', false, 'ENTRAR');
+  } else {
+    window.location.href = 'app.html';
+  }
+}
+
+/* ── REGISTRO ── */
+async function doRegister() {
+  const email   = document.getElementById('r_email').value.trim();
+  const pass    = document.getElementById('r_pass').value;
+  const pass2   = document.getElementById('r_pass2').value;
+  const name    = document.getElementById('r_name').value.trim();
+  const age     = document.getElementById('r_age').value;
+  const exp     = document.getElementById('r_exp').value;
+  const how     = document.getElementById('r_how').value;
+  const insta   = document.getElementById('r_insta').checked;
+  const consent = document.getElementById('r_consent').checked;
+
+  if (!email || !pass || !name) { msg('msg-reg', 'err', 'E-mail, senha e nome são obrigatórios.'); return; }
+  if (pass.length < 8)           { msg('msg-reg', 'err', 'Senha deve ter no mínimo 8 caracteres.'); return; }
+  if (pass !== pass2)            { msg('msg-reg', 'err', 'As senhas não coincidem.'); return; }
+  if (!consent)                  { msg('msg-reg', 'err', 'A autorização de compartilhamento de dados é obrigatória para usar a ferramenta.'); return; }
+
+  noMsg('msg-reg');
+  setBtn('btn-reg', true, 'Criando conta...');
+
+  const { data, error } = await sb.auth.signUp({ email, password: pass });
+  if (error) {
+    msg('msg-reg', 'err', error.message);
+    setBtn('btn-reg', false, 'CRIAR CONTA');
+    return;
+  }
+
+  /* Salva perfil */
+  if (data.user) {
+    await sb.from('profiles').upsert({
+      id: data.user.id,
+      email,
+      name,
+      age: age ? parseInt(age) : null,
+      experience: exp || null,
+      how_found: how || null,
+      follows_instagram: insta,
+      consent_sharing: true,
+    });
+  }
+
+  /* Redireciona ou pede confirmação de e-mail */
+  if (data.session) {
+    window.location.href = 'app.html';
+  } else {
+    setBtn('btn-reg', false, 'CRIAR CONTA');
+    msg('msg-reg', 'ok',
+      '✅ Conta criada com sucesso!<br>Verifique seu e-mail e clique no link de confirmação para ativar. Depois volte aqui e faça login.<br><br>' +
+      '<small style="opacity:.7">Dica ao administrador: para evitar este passo, desative a confirmação de e-mail em Supabase → Authentication → Settings → Enable email confirmations.</small>');
+  }
+}
+
+/* ── Enter para submeter ── */
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const loginVis = document.getElementById('frm-in').style.display !== 'none';
+  if (loginVis) doLogin(); else doRegister();
+});
+</script>
+</body>
+</html>

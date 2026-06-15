@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registro de Cronógrafo — @ale308win</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx-js-style.min.js"></script>
+<style>
+/* ── RESET ─────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0b0f;--bg2:#101018;--bg3:#161622;--bg4:#1e1e2e;
+  --gold:#c09a3a;--gold-l:#d4b050;--gold-d:#8b7332;--gold-dim:rgba(192,154,58,.15);
+  --text:#ddd8c4;--text2:#999887;
+  --border:#2a2a3a;--border2:#383850;
+  --shadow:0 4px 24px rgba(0,0,0,.6);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;line-height:1.4}
+a{color:var(--gold);text-decoration:none}a:hover{color:var(--gold-l);text-decoration:underline}
+input,select,textarea{font-family:'Rajdhani',sans-serif;font-size:13px}
+
+/* ══════════════════════════════════════════
+   LANDING PAGE
+══════════════════════════════════════════ */
+#landing{position:relative;min-height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* hero — full-screen background */
+.lp-hero{position:fixed;inset:0;z-index:0;overflow:hidden;background:var(--bg2)}
+
+/* CSS fallback pattern (always behind images) */
+.lp-hero::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 65%,rgba(192,154,58,.1) 0%,transparent 70%),
+    linear-gradient(160deg,#0a0a10 0%,#0e0e1a 50%,#12121f 100%);
+}
+.lp-hero::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background-image:
+    repeating-linear-gradient(0deg,transparent,transparent 50px,rgba(192,154,58,.025) 50px,rgba(192,154,58,.025) 51px),
+    repeating-linear-gradient(90deg,transparent,transparent 50px,rgba(192,154,58,.025) 50px,rgba(192,154,58,.025) 51px);
+}
+
+/* responsive images */
+.lp-bg-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;z-index:2;
+  transition:opacity .5s;
+}
+.lp-desktop{display:block}
+.lp-mobile{display:none}
+@media(max-width:768px){
+  .lp-desktop{display:none}
+  .lp-mobile{display:block}
+}
+
+/* dark gradient overlay on top of image */
+.lp-veil{
+  position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(11,11,15,.55) 0%,rgba(11,11,15,.35) 30%,rgba(11,11,15,.45) 70%,rgba(11,11,15,.85) 100%),
+    linear-gradient(90deg,rgba(11,11,15,.25) 0%,rgba(11,11,15,.1) 100%);
+}
+
+/* content: centered */
+.lp-content{
+  position:relative;z-index:4;
+  display:flex;flex-direction:column;
+  align-items:center;text-align:center;
+  justify-content:center;
+  min-height:100vh;
+  padding:50px 40px 60px;
+  width:100%;max-width:860px;margin:0 auto;
+}
+.lp-badge{
+  display:inline-block;border:1px solid var(--gold-d);
+  color:var(--gold);font-size:10px;font-weight:700;letter-spacing:3px;
+  padding:4px 14px;margin-bottom:18px;text-transform:uppercase;font-family:'Oswald',sans-serif;
+}
+.lp-title{
+  font-family:'Oswald',sans-serif;
+  font-size:clamp(28px,5vw,52px);font-weight:700;
+  letter-spacing:1px;line-height:1.05;color:#fff;
+  margin-bottom:10px;text-transform:uppercase;text-align:center;
+}
+.lp-title span{color:var(--gold)}
+.lp-sub{
+  font-family:'Rajdhani',sans-serif;font-size:16px;
+  color:var(--text2);letter-spacing:1px;margin-bottom:12px;
+}
+.lp-dev{font-size:13px;color:var(--text2);margin-bottom:28px;letter-spacing:.3px}
+.lp-dev a{font-weight:700;color:var(--gold)}
+
+/* disclaimer boxes */
+.lp-disc{
+  width:100%;max-width:720px;
+  border:1px solid var(--border2);border-left:3px solid var(--gold-d);
+  background:rgba(0,0,0,.45);padding:13px 18px;margin-bottom:12px;
+  border-radius:0 4px 4px 0;backdrop-filter:blur(6px);text-align:left;
+}
+.lp-disc h4{font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.lp-disc p{font-size:12px;color:var(--text2);line-height:1.55}
+.lp-disc.warn{border-left-color:#e65100}
+.lp-disc.warn h4{color:#ff8a50}
+.btn-cta{
+  margin-top:28px;font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;
+  letter-spacing:3px;text-transform:uppercase;border:none;cursor:pointer;
+  background:var(--gold);color:#000;padding:14px 44px;transition:all .2s;position:relative;overflow:hidden;
+}
+.btn-cta:hover{background:var(--gold-l)}
+.btn-cta:active{transform:scale(.97)}
+
+/* ══════════════════════════════════════════
+   APP
+══════════════════════════════════════════ */
+#app{display:none;min-height:100vh;background:var(--bg)}
+
+/* header */
+.app-header{
+  background:var(--bg2);border-bottom:2px solid var(--gold-d);
+  padding:11px 24px;display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:50;
+}
+.app-logo{font-size:22px}
+.app-title{font-family:'Oswald',sans-serif;font-size:17px;color:var(--gold);font-weight:600;letter-spacing:1.5px;text-transform:uppercase}
+.app-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.header-dev{margin-left:auto;font-size:11px;color:var(--text2)}
+.header-dev a{color:var(--gold);font-weight:700}
+
+.container{max-width:1200px;margin:0 auto;padding:18px 16px 40px}
+
+/* sections */
+.section{background:var(--bg3);border:1px solid var(--border);border-radius:4px;margin-bottom:12px;overflow:hidden}
+.section-title{
+  background:var(--bg4);border-bottom:1px solid var(--border);
+  color:var(--gold);font-family:'Oswald',sans-serif;font-weight:600;font-size:12px;letter-spacing:2px;
+  text-transform:uppercase;padding:9px 16px;display:flex;align-items:center;gap:8px;
+}
+.section-body{padding:14px 16px}
+
+/* grids */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 18px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px 18px}
+@media(max-width:768px){.g3,.g4{grid-template-columns:1fr 1fr}}
+
+/* form fields */
+label{display:block;font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px}
+input[type="text"],input[type="number"],select,textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:2px;
+  padding:6px 8px;color:var(--text);font-family:'Rajdhani',sans-serif;font-size:13px;transition:border-color .2s;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold-d);background:#0d0d14}
+select{cursor:pointer}select option{background:var(--bg4)}
+textarea{resize:vertical;min-height:60px}
+.sub-lbl{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--gold-d);padding-bottom:4px;margin-bottom:9px}
+
+/* ── OVERFLOW WRAPPER for wide tables ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:-4px -2px;padding:4px 2px}
+
+/* ── 5-COL TABLE (label + 4 loads) ── */
+.loads-head{
+  display:grid;grid-template-columns:150px 1fr 1fr 1fr 1fr;
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:3px 3px 0 0;overflow:hidden;
+  min-width:620px;
+}
+.loads-head>div{
+  background:var(--bg4);color:var(--gold);font-family:'Oswald',sans-serif;
+  font-size:11px;font-weight:600;letter-spacing:1px;padding:8px 10px;text-align:center;
+}
+.loads-head>div:first-child{text-align:left;font-size:10px}
+.loads-row{
+  display:grid;grid-template-columns:150px 1fr 1fr 1fr 1fr;
+  gap:1px;background:var(--border);
+  border-left:1px solid var(--border);border-right:1px solid var(--border);
+  min-width:620px;
+}
+.loads-row:last-child{border-bottom:1px solid var(--border);border-radius:0 0 3px 3px}
+.loads-row>div{background:var(--bg3);padding:4px 8px}
+.loads-row>div:first-child{background:var(--bg4);display:flex;align-items:center;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
+.loads-row:nth-child(odd)>div{background:#0f0f18}
+.loads-row:nth-child(odd)>div:first-child{background:#12121e}
+.loads-row input,.loads-row select{font-size:11px;padding:3px 6px}
+
+/* ── VELOCITY GRID 5 cols ── */
+.vel-grid{
+  display:grid;grid-template-columns:110px 1fr 1fr 1fr 1fr;
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:3px;overflow:hidden;
+  min-width:600px;
+}
+.vel-lbl{background:var(--bg4);display:flex;align-items:center;padding:4px 8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2);text-transform:uppercase}
+.vel-cell{background:var(--bg3);padding:3px 6px;display:flex;align-items:center;gap:4px}
+.vel-cell:nth-child(10n+3),.vel-cell:nth-child(10n+4),.vel-cell:nth-child(10n+5),.vel-cell:nth-child(10n+6){background:#0f0f18}
+.vel-cell span{font-size:9px;color:var(--text2);white-space:nowrap;font-family:'Share Tech Mono',monospace}
+.vel-cell input{flex:1;text-align:center;font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:600;color:var(--gold-l);min-width:0}
+.vel-head{
+  display:grid;grid-template-columns:110px 1fr 1fr 1fr 1fr;
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:3px 3px 0 0;overflow:hidden;
+  min-width:600px;
+}
+.vel-head>div{background:var(--bg4);color:var(--gold);font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:.8px;padding:7px 8px;text-align:center}
+.vel-head>div:first-child{text-align:left;font-size:10px}
+
+/* ── RESULTS GRID 5 cols ── */
+.out-grid{
+  display:grid;grid-template-columns:185px 1fr 1fr 1fr 1fr;
+  gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:3px;overflow:hidden;
+  min-width:640px;
+}
+.out-lbl{background:#0d0d18;color:var(--text2);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:8px 10px;display:flex;align-items:center;gap:5px}
+.out-val{
+  background:var(--bg3);padding:8px 8px;
+  font-family:'Share Tech Mono',monospace;font-size:14px;font-weight:700;color:var(--gold-l);
+  display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;flex-wrap:wrap;
+}
+.out-val.alt{background:#0f0f1c;font-size:12px;color:var(--text2)}
+.unit{font-size:9px;font-weight:400;color:var(--text2);font-family:'Rajdhani',sans-serif}
+
+/* ── METRICS DESCRIPTION TABLE ── */
+.metrics-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px}
+.metrics-tbl th{
+  background:var(--bg4);color:var(--gold);font-family:'Oswald',sans-serif;
+  font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:9px 12px;text-align:left;border-bottom:2px solid var(--gold-d);white-space:nowrap;
+}
+.metrics-tbl td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45}
+.metrics-tbl tr:last-child td{border-bottom:none}
+.metrics-tbl tr:hover td{background:rgba(192,154,58,.03)}
+.m-name{font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;color:var(--gold-l);white-space:nowrap}
+.m-form{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);white-space:nowrap}
+.m-desc{color:var(--text);font-size:12px}
+.m-ref{color:var(--text2);font-size:11px;font-style:italic}
+
+/* ── BADGES ── */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.3px;white-space:nowrap;font-family:'Rajdhani',sans-serif}
+.bg-ex{background:rgba(46,125,50,.25);color:#81c784;border:1px solid rgba(46,125,50,.4)}
+.bg-go{background:rgba(124,179,66,.2);color:#aed581;border:1px solid rgba(124,179,66,.35)}
+.bg-ac{background:rgba(249,168,37,.2);color:#ffd54f;border:1px solid rgba(249,168,37,.35)}
+.bg-po{background:rgba(230,81,0,.2);color:#ffb74d;border:1px solid rgba(230,81,0,.35)}
+.bg-cr{background:rgba(198,40,40,.25);color:#ef9a9a;border:1px solid rgba(198,40,40,.4)}
+
+/* ── TOOLTIP ── */
+.tip-wrap{position:relative;display:inline-flex;align-items:center}
+.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--gold-d);color:var(--bg);font-size:9px;font-weight:900;cursor:help;flex-shrink:0;margin-left:4px}
+.tip-box{display:none;position:absolute;left:20px;top:-4px;z-index:100;background:#1a1a2a;color:var(--text2);font-size:11px;line-height:1.45;padding:8px 12px;border-radius:4px;width:220px;box-shadow:0 4px 20px rgba(0,0,0,.7);border:1px solid var(--border2);pointer-events:none;font-family:'Rajdhani',sans-serif}
+.tip-wrap:hover .tip-box{display:block}
+
+/* ── INFO/ALERT BOXES ── */
+.info-box{border:1px solid var(--border2);border-left:3px solid var(--gold-d);background:rgba(192,154,58,.05);padding:11px 15px;margin-top:10px;border-radius:0 3px 3px 0}
+.info-box h4{font-family:'Oswald',sans-serif;font-size:11px;color:var(--gold);margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
+.info-box p{font-size:12px;color:var(--text2);line-height:1.55}
+.info-box.warn{border-left-color:#e65100}
+.info-box.warn h4{color:#ff8a50}
+.alert-box{display:none;border:1px solid rgba(230,81,0,.4);border-left:3px solid #e65100;background:rgba(230,81,0,.1);padding:11px 15px;margin-top:10px;border-radius:0 3px 3px 0}
+.alert-box h4{font-family:'Oswald',sans-serif;font-size:12px;color:#ff8a50;margin-bottom:4px;letter-spacing:.5px;text-transform:uppercase}
+.alert-box p{font-size:12px;color:#ffb74d;line-height:1.5}
+
+/* ── LEGEND ── */
+.leg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+@media(max-width:700px){.leg-grid{grid-template-columns:1fr}}
+.leg-card{border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.leg-card-title{background:var(--bg4);color:var(--gold);font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;padding:7px 12px;text-transform:uppercase}
+.leg-row{display:flex;align-items:center;gap:8px;padding:5px 12px;border-bottom:1px solid var(--border);font-size:11px}
+.leg-row:last-child{border-bottom:none}
+.leg-row .rng{font-family:'Share Tech Mono',monospace;font-weight:700;min-width:68px;color:var(--text);font-size:10px}
+.leg-row .dsc{color:var(--text2);font-size:11px}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.btn{padding:9px 20px;border:none;border-radius:2px;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;white-space:nowrap}
+.btn:hover{filter:brightness(1.15)}
+.btn:active{transform:scale(.97)}
+.btn-excel{background:var(--gold);color:#000}
+.btn-calc{background:#1d3b1d;color:#81c784;border:1px solid #2e7d32}
+.btn-clear{background:var(--bg4);color:var(--text2);border:1px solid var(--border2)}
+.btn-back{background:transparent;color:var(--text2);border:1px solid var(--border2);font-size:11px;padding:7px 14px}
+
+/* ── DISC BAR (app) ── */
+.app-disc{background:rgba(192,154,58,.06);border:1px solid var(--border);border-left:3px solid var(--gold-d);padding:9px 14px;margin-bottom:12px;border-radius:0 3px 3px 0}
+.app-disc p{font-size:11px;color:var(--text2);line-height:1.5}
+.app-disc a{color:var(--gold)}
+
+/* footer */
+.app-footer{text-align:center;padding:14px;font-size:11px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- ╔═══════════════════════════════════╗
+     ║         LANDING PAGE              ║
+     ╚═══════════════════════════════════╝ -->
+<div id="landing">
+
+  <!-- Background images -->
+  <div class="lp-hero">
+    <img class="lp-bg-img lp-desktop" src="crono_desktop.jpg" alt="Estande de tiro"
+         onerror="this.style.opacity='0'">
+    <img class="lp-bg-img lp-mobile"  src="crono_mobile.jpg"  alt="Estande de tiro"
+         onerror="this.style.opacity='0'">
+  </div>
+  <div class="lp-veil"></div>
+
+  <!-- Centered content -->
+  <div class="lp-content">
+
+    <div class="lp-badge">🎯 Ferramenta Educacional · Tiro Esportivo</div>
+
+    <h1 class="lp-title">
+      Registro <span>&amp;</span> Análise<br>de Dados de <span>Cronógrafo</span>
+    </h1>
+    <p class="lp-sub">Ferramenta educacional de apoio ao recarregador</p>
+
+    <p class="lp-dev">
+      Desenvolvido por
+      <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a>
+      &nbsp;·&nbsp;
+      <a href="https://www.instagram.com/ale308win" target="_blank">Curso de recarga</a>
+    </p>
+
+    <div class="lp-disc">
+      <h4>⚠ Dados de Referência</h4>
+      <p>Sempre confirme com o manual do fabricante da pólvora e do projétil. Inicie com a carga recomendada e <strong>nunca exceda a carga máxima</strong>. O uso destas informações é de responsabilidade exclusiva do recarregador. Material de apoio aos alunos do <a href="https://www.instagram.com/ale308win" target="_blank">curso de recarga do @ale308win</a>.</p>
+    </div>
+
+    <div class="lp-disc warn">
+      <h4>🚫 Local Adequado para Coleta de Dados</h4>
+      <p>A captura de dados com cronógrafo <strong>deve ser realizada exclusivamente em estande de tiro legalmente habilitado</strong>, certificado pelos órgãos competentes (COLOG, Exército Brasileiro ou Polícia Federal). É obrigatório o uso de EPIs (protetor ocular e auricular), respeito à linha de fogo, manipulação segura de armas e munições, e obediência às ordens do oficial de segurança. A realização em locais não autorizados <strong>é crime</strong> previsto no Estatuto do Desarmamento (Lei 10.826/2003). O recarregador é o único responsável por sua conduta e pela segurança de todos ao redor.</p>
+    </div>
+
+    <button class="btn-cta" onclick="openApp()">INSERIR DADOS →</button>
+
+  </div>
+</div><!-- /landing -->
+
+
+<!-- ╔═══════════════════════════════════╗
+     ║              APP                  ║
+     ╚═══════════════════════════════════╝ -->
+<div id="app">
+
+  <div class="app-header">
+    <div class="app-logo">🎯</div>
+    <div>
+      <div class="app-title">Registro &amp; Análise de Dados de Cronógrafo</div>
+      <div class="app-sub">Ferramenta educacional — <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a></div>
+    </div>
+    <div class="header-dev"><a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a></div>
+  </div>
+
+  <div class="container">
+
+    <div class="app-disc">
+      <p>⚠ <strong>Dados de referência.</strong> Confirme sempre com o manual do fabricante. Inicie com a carga mínima e nunca exceda a carga máxima. Responsabilidade exclusiva do recarregador. <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a></p>
+    </div>
+
+    <!-- ── IDENTIFICAÇÃO ── -->
+    <div class="section">
+      <div class="section-title">🗂 Identificação do Teste</div>
+      <div class="section-body">
+        <div class="g4">
+          <div><label>Data</label><input type="text" id="f_data" placeholder="DD/MM/AAAA"></div>
+          <div><label>Atirador / Recarregador</label><input type="text" id="f_atirador" placeholder="Nome completo"></div>
+          <div><label>Calibre</label><input type="text" id="f_calibre" placeholder="Ex: 5.56×45, .308 Win"></div>
+          <div><label>Distância ao Crono</label><input type="text" id="f_distancia" placeholder="Ex: 2 metros"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EQUIPAMENTO + CLIMA + LOCAL ── -->
+    <div class="section">
+      <div class="section-title">🔫 Equipamento &amp; Condições</div>
+      <div class="section-body">
+        <div class="g3">
+
+          <div>
+            <div class="sub-lbl">Arma</div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div>
+                <label>Tipo</label>
+                <select id="f_tipo">
+                  <option value="">— selecione —</option>
+                  <option>Pistola</option><option>Revólver</option><option>Carabina</option>
+                  <option>Fuzil</option><option>Rifle</option><option>Espingarda</option>
+                </select>
+              </div>
+              <div><label>Modelo</label><input type="text" id="f_modelo" placeholder="Ex: T4, AR-15"></div>
+              <div><label>Fabricante</label><input type="text" id="f_fab" placeholder="Ex: Taurus, Colt"></div>
+              <div><label>Comprimento do Cano</label><input type="text" id="f_cano" placeholder='Ex: 368 mm / 16"'></div>
+              <div><label>Cronógrafo</label><input type="text" id="f_crono" placeholder="Ex: ProChrono, Caldwell"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sub-lbl">Condições Climáticas</div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div>
+                <label>Clima</label>
+                <select id="f_clima">
+                  <option value="">— selecione —</option>
+                  <option>Ensolarado</option><option>Nublado</option>
+                  <option>Chuva</option><option>Indoor</option>
+                </select>
+              </div>
+              <div><label>Temperatura (°C)</label><input type="number" id="f_temp" placeholder="Ex: 32"></div>
+              <div><label>Umidade (%)</label><input type="number" id="f_umid" placeholder="Ex: 37"></div>
+              <div><label>Altitude (m)</label><input type="number" id="f_alt" placeholder="Ex: 800"></div>
+              <div><label>Vento</label><input type="text" id="f_vento" placeholder="Ex: Calmo, 10 km/h NE"></div>
+            </div>
+          </div>
+
+          <div>
+            <div class="sub-lbl">Local do Teste</div>
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div><label>Cidade</label><input type="text" id="f_cidade" placeholder="Ex: Itatiba"></div>
+              <div>
+                <label>Estado</label>
+                <select id="f_estado">
+                  <option value="">— selecione —</option>
+                  <option>AC — Acre</option><option>AL — Alagoas</option><option>AP — Amapá</option>
+                  <option>AM — Amazonas</option><option>BA — Bahia</option><option>CE — Ceará</option>
+                  <option>DF — Distrito Federal</option><option>ES — Espírito Santo</option><option>GO — Goiás</option>
+                  <option>MA — Maranhão</option><option>MT — Mato Grosso</option><option>MS — Mato Grosso do Sul</option>
+                  <option>MG — Minas Gerais</option><option>PA — Pará</option><option>PB — Paraíba</option>
+                  <option>PR — Paraná</option><option>PE — Pernambuco</option><option>PI — Piauí</option>
+                  <option>RJ — Rio de Janeiro</option><option>RN — Rio Grande do Norte</option>
+                  <option>RS — Rio Grande do Sul</option><option>RO — Rondônia</option><option>RR — Roraima</option>
+                  <option>SC — Santa Catarina</option><option>SP — São Paulo</option>
+                  <option>SE — Sergipe</option><option>TO — Tocantins</option>
+                </select>
+              </div>
+              <div><label>Clube / Estande de Tiro</label><input type="text" id="f_clube" placeholder="Ex: Cartucho"></div>
+              <div>
+                <label>Marcas na espoleta?</label>
+                <select id="f_sobre" onchange="calcAll()">
+                  <option value="">— selecione —</option>
+                  <option>NÃO</option><option>SIM – em algumas</option>
+                  <option>SIM – em todas</option><option>SIM – em uma</option>
+                </select>
+              </div>
+              <div>
+                <label>Dificuldade na extração?</label>
+                <select id="f_extra" onchange="calcAll()">
+                  <option value="">— selecione —</option>
+                  <option>NÃO</option><option>SIM – leve</option><option>SIM – severa</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ── COMPONENTES (4 cargas) ── -->
+    <div class="section">
+      <div class="section-title">🔩 Componentes das Cargas (4 cargas para comparação)</div>
+      <div class="section-body">
+        <div class="tbl-wrap">
+          <div class="loads-head">
+            <div>Componente</div>
+            <div>CARGA 1</div><div>CARGA 2</div><div>CARGA 3</div><div>CARGA 4</div>
+          </div>
+          <div id="loads-rows"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VELOCIDADES (4 cargas) ── -->
+    <div class="section">
+      <div class="section-title">📡 Velocidades Registradas (fps)</div>
+      <div class="section-body">
+        <div class="tbl-wrap">
+          <div class="vel-head">
+            <div>Sessão</div>
+            <div>CARGA 1</div><div>CARGA 2</div><div>CARGA 3</div><div>CARGA 4</div>
+          </div>
+          <div class="vel-grid" id="vel-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- action buttons -->
+    <div class="btn-row">
+      <button class="btn btn-back" onclick="goLanding()">← Voltar</button>
+      <button class="btn btn-clear" onclick="clearVel()">Limpar Velocidades</button>
+      <button class="btn btn-calc" onclick="calcAll()">⚡ Calcular</button>
+      <button class="btn btn-excel" onclick="exportExcel()">📊 Exportar Excel</button>
+    </div>
+
+    <!-- ── RESULTADOS (4 cargas) ── -->
+    <div class="section">
+      <div class="section-title">📊 Resultados Calculados</div>
+      <div class="section-body">
+        <div class="tbl-wrap">
+          <div class="out-grid">
+
+            <!-- header row -->
+            <div class="out-lbl" style="background:#0a0a12;font-size:10px;letter-spacing:1.5px">MÉTRICA</div>
+            <div class="out-val" style="background:#0c0c16;font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);letter-spacing:1px">CARGA 1</div>
+            <div class="out-val" style="background:#0c0c16;font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);letter-spacing:1px">CARGA 2</div>
+            <div class="out-val" style="background:#0c0c16;font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);letter-spacing:1px">CARGA 3</div>
+            <div class="out-val" style="background:#0c0c16;font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);letter-spacing:1px">CARGA 4</div>
+
+            <!-- VÁLIDOS -->
+            <div class="out-lbl"><span class="tip-wrap">VÁLIDOS (n)<span class="tip-icon">?</span><span class="tip-box">Nº de disparos com leitura válida. Mín. 5; ideal ≥10 para estatística confiável.</span></span></div>
+            <div class="out-val" id="r1_v">—</div><div class="out-val" id="r2_v">—</div><div class="out-val" id="r3_v">—</div><div class="out-val" id="r4_v">—</div>
+
+            <!-- AVG fps -->
+            <div class="out-lbl"><span class="tip-wrap">AVG — Vel. Média<span class="tip-icon">?</span><span class="tip-box">Média aritmética das velocidades (fps). V0 característica da carga. Compare com o manual do fabricante.</span></span></div>
+            <div class="out-val" id="r1_avg">—</div><div class="out-val" id="r2_avg">—</div><div class="out-val" id="r3_avg">—</div><div class="out-val" id="r4_avg">—</div>
+
+            <!-- AVG m/s -->
+            <div class="out-lbl" style="background:#0a0a14"><span style="font-size:10px;color:var(--text2)">AVG em m/s</span></div>
+            <div class="out-val alt" id="r1_ms">—</div><div class="out-val alt" id="r2_ms">—</div><div class="out-val alt" id="r3_ms">—</div><div class="out-val alt" id="r4_ms">—</div>
+
+            <!-- HI -->
+            <div class="out-lbl"><span class="tip-wrap">HI — Maior Vel.<span class="tip-icon">?</span><span class="tip-box">Maior leitura da série. Não deve ultrapassar o limite máximo do manual. Se ultrapassar: reduza a carga imediatamente.</span></span></div>
+            <div class="out-val" id="r1_hi">—</div><div class="out-val" id="r2_hi">—</div><div class="out-val" id="r3_hi">—</div><div class="out-val" id="r4_hi">—</div>
+
+            <!-- LO -->
+            <div class="out-lbl"><span class="tip-wrap">LO — Menor Vel.<span class="tip-icon">?</span><span class="tip-box">Menor leitura da série. Valores muito baixos indicam ignição fraca, pólvora comprometida ou espoleta defeituosa.</span></span></div>
+            <div class="out-val" id="r1_lo">—</div><div class="out-val" id="r2_lo">—</div><div class="out-val" id="r3_lo">—</div><div class="out-val" id="r4_lo">—</div>
+
+            <!-- ES -->
+            <div class="out-lbl"><span class="tip-wrap">ES — Extreme Spread<span class="tip-icon">?</span><span class="tip-box">HI − LO (fps). Amplitude total de variação. Quanto menor, melhor. Sensível a um único outlier.</span></span></div>
+            <div class="out-val" id="r1_es">—</div><div class="out-val" id="r2_es">—</div><div class="out-val" id="r3_es">—</div><div class="out-val" id="r4_es">—</div>
+
+            <!-- ES% -->
+            <div class="out-lbl"><span class="tip-wrap">ES% — Spread %<span class="tip-icon">?</span><span class="tip-box">ES / AVG × 100. ES normalizado pela velocidade média. Permite comparar cargas de velocidades diferentes.</span></span></div>
+            <div class="out-val" id="r1_esp">—</div><div class="out-val" id="r2_esp">—</div><div class="out-val" id="r3_esp">—</div><div class="out-val" id="r4_esp">—</div>
+
+            <!-- SD -->
+            <div class="out-lbl"><span class="tip-wrap">SD — Desvio Padrão<span class="tip-icon">?</span><span class="tip-box">√[Σ(vi−AVG)²/(n−1)]. Indicador estatístico mais robusto de consistência. Considera todos os disparos da série.</span></span></div>
+            <div class="out-val" id="r1_sd">—</div><div class="out-val" id="r2_sd">—</div><div class="out-val" id="r3_sd">—</div><div class="out-val" id="r4_sd">—</div>
+
+            <!-- Energia -->
+            <div class="out-lbl"><span class="tip-wrap">Energia Cinética (J)<span class="tip-icon">?</span><span class="tip-box">E = ½ × m(kg) × v²(m/s). Calculada com o peso informado nos componentes. Relevante para análise terminal e classificação legal.</span></span></div>
+            <div class="out-val" id="r1_e">—</div><div class="out-val" id="r2_e">—</div><div class="out-val" id="r3_e">—</div><div class="out-val" id="r4_e">—</div>
+
+          </div>
+        </div>
+
+        <div class="alert-box" id="alert_sobre">
+          <h4>⚠ Atenção — Sinais de Sobrepressão Detectados</h4>
+          <p id="alert_txt"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INTERPRETAÇÃO DAS MÉTRICAS ── -->
+    <div class="section">
+      <div class="section-title">🔬 Interpretação das Métricas — O que cada resultado significa</div>
+      <div class="section-body">
+        <div class="tbl-wrap">
+          <table class="metrics-tbl">
+            <thead>
+              <tr>
+                <th>Métrica</th>
+                <th>Fórmula / Cálculo</th>
+                <th>O que mede</th>
+                <th>Leitura / Ação recomendada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="m-name">n Válidos</span></td>
+                <td><span class="m-form">contagem</span></td>
+                <td><span class="m-desc">Nº de disparos com V0 aceita pelo cronógrafo</span></td>
+                <td><span class="m-ref">≥ 5 mínimo; ≥ 10 para análise estatística confiável. Abaixo de 5: resultado inconlusivo.</span></td>
+              </tr>
+              <tr>
+                <td><span class="m-name">AVG (fps)</span></td>
+                <td><span class="m-form">Σvᵢ / n</span></td>
+                <td><span class="m-desc">Velocidade média da série — V0 característica da carga montada</span></td>
+                <td><span class="m-ref">Compare sempre com a tabela do manual. Velocidade acima do esperado para a carga indica sobrepressão potencial.</span></td>
+              </tr>
+              <tr>
+                <td><span class="m-name">AVG (m/s)</span></td>
+                <td><span class="m-form">AVG × 0,3048</span></td>
+                <td><span class="m-desc">Mesma velocidade média expressa no Sistema Internacional (SI)</span></td>
+                <td><span class="m-ref">Unidade padrão europeia. Usada no cálculo de energia cinética e em comparações internacionais.</span></td>
+              </tr>
+              <tr>
+                <td><span class="m-name">HI (fps)</span></td>
+                <td><span class="m-form">max(vᵢ)</span></td>
+                <td><span class="m-desc">Maior velocidade registrada em toda a série</span></td>
+                <td><span class="m-ref">Limite superior absoluto da variação. Nunca deve ultrapassar a V0 máxima indicada no manual da pólvora.</span></td>
+              </tr>
+              <tr>
+                <td><span class="m-name">LO (fps)</span></td>
+                <td><span class="m-form">min(vᵢ)</span></td>
+                <td><span class="m-desc">Menor velocidade registrada em toda a série</span></td>
+                <td><span class="m-ref">LO muito baixo indica ignição fraca, pólvora comprometida ou falha de espoleta. Investigar antes de continuar.</span></td>
+              </tr>
+              <tr>
+                <td><span class="m-name">ES (fps)</span></td>
+                <td><span class="m-form">HI − LO</span></td>
+                <td><span class="m-desc">Extreme Spread — amplitude total de variação de velocidade</span></td>
+                <td><span class="m-ref">Indicador clássico de consistência. Sensível a outliers isolados. Afeta a dispersão vertical a longas distâncias.</span></td>
+              </tr>
+              <tr>
+                <td><span class="m-name">ES%</span></td>
+                <td><span class="m-form">(ES / AVG) × 100</span></td>
+                <td><span class="m-desc">ES relativo à velocidade média — spread normalizado</span></td>
+                <td><span class="m-ref">Permite comparar cargas de velocidades muito diferentes na mesma escala percentual. Mais justo que ES absoluto.</span></td>
+              </tr>
+              <tr>
+                <td><span class="m-name">SD (fps)</span></td>
+                <td><span class="m-form">√[Σ(vᵢ−AVG)²/(n−1)]</span></td>
+                <td><span class="m-desc">Desvio padrão amostral — dispersão de TODOS os disparos em torno da média</span></td>
+                <td><span class="m-ref">Principal indicador de consistência. Mais robusto que ES: não é distorcido por um único outlier. Usar em conjunto com ES.</span></td>
+              </tr>
+              <tr>
+                <td><span class="m-name">Energia (J)</span></td>
+                <td><span class="m-form">½ × m(kg) × v²(m/s)</span></td>
+                <td><span class="m-desc">Energia cinética do projétil na saída do cano</span></td>
+                <td><span class="m-ref">Referência para análise terminal balística e enquadramento legal de munições de uso restrito no Brasil.</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="info-box">
+          <h4>💡 SD vs ES — qual usar?</h4>
+          <p>O ES é calculado com apenas dois pontos (HI e LO), sendo altamente sensível a um único disparo anômalo. Um outlier distorce completamente o resultado. O SD avalia <em>todos</em> os disparos e é estatisticamente mais robusto. Na prática: use o SD como indicador primário de consistência e o ES como sinal de alerta para outliers. ES alto com SD baixo = disparo isolado anômalo — investigue aquele cartucho específico.</p>
+        </div>
+
+        <div class="info-box warn">
+          <h4>⚠ Sinais de Sobrepressão — Inspecione Sempre</h4>
+          <p><strong>Espoleta:</strong> achatamento excessivo, extrusão ao redor do percussor, perfuração ou brilho metálico. <strong>Estojo:</strong> dificuldade de extração, marcas de câmara no corpo, separação da cabeça. <strong>Velocidade:</strong> salto inesperado acima do padrão sem aumento de carga. Ao detectar qualquer sinal: <strong>PARE imediatamente, reduza a carga em 10% e refaça o teste.</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── LEGENDA ESTATÍSTICA ── -->
+    <div class="section">
+      <div class="section-title">📖 Tabela de Referência — Critérios Estatísticos</div>
+      <div class="section-body">
+        <p style="font-size:11px;color:var(--text2);margin-bottom:10px">Critérios consolidados pela comunidade de tiro de precisão (Benchrest / F-Class / Competitive Shooters). Avalie SD e ES% em conjunto. Use sempre ≥ 10 disparos para análise estatística válida.</p>
+        <div class="leg-grid">
+          <div class="leg-card">
+            <div class="leg-card-title">🎯 Desvio Padrão (SD) — fps</div>
+            <div class="leg-row"><span class="rng">&lt; 10</span><span class="badge bg-ex">Excelente</span><span class="dsc">Benchrest / F-Class. Consistência excepcional.</span></div>
+            <div class="leg-row"><span class="rng">10–15</span><span class="badge bg-go">Bom</span><span class="dsc">Precisão a longas distâncias (300m+).</span></div>
+            <div class="leg-row"><span class="rng">15–25</span><span class="badge bg-ac">Aceitável</span><span class="dsc">Uso geral. Impacto notável acima de 200m.</span></div>
+            <div class="leg-row"><span class="rng">25–35</span><span class="badge bg-po">Ruim</span><span class="dsc">Revisar componentes, OAL ou espoleta.</span></div>
+            <div class="leg-row"><span class="rng">&gt; 35</span><span class="badge bg-cr">Crítico</span><span class="dsc">Problema de ignição. Não usar.</span></div>
+          </div>
+          <div class="leg-card">
+            <div class="leg-card-title">📏 Extreme Spread % (ES%)</div>
+            <div class="leg-row"><span class="rng">&lt; 1,0%</span><span class="badge bg-ex">Excelente</span><span class="dsc">Variação mínima — carga altamente uniforme.</span></div>
+            <div class="leg-row"><span class="rng">1,0–1,5%</span><span class="badge bg-go">Bom</span><span class="dsc">Consistência satisfatória para precisão.</span></div>
+            <div class="leg-row"><span class="rng">1,5–2,5%</span><span class="badge bg-ac">Aceitável</span><span class="dsc">Treino e caça. Refinar processo.</span></div>
+            <div class="leg-row"><span class="rng">2,5–3,5%</span><span class="badge bg-po">Ruim</span><span class="dsc">Verificar pólvora, OAL, primer.</span></div>
+            <div class="leg-row"><span class="rng">&gt; 3,5%</span><span class="badge bg-cr">Crítico</span><span class="dsc">Carga não confiável. Não usar em competição.</span></div>
+          </div>
+          <div class="leg-card">
+            <div class="leg-card-title">↔ Extreme Spread absoluto (ES) — fps</div>
+            <div class="leg-row"><span class="rng">&lt; 25</span><span class="badge bg-ex">Excelente</span><span class="dsc">Amplitude mínima — benchrest.</span></div>
+            <div class="leg-row"><span class="rng">25–40</span><span class="badge bg-go">Bom</span><span class="dsc">Preciso para a maioria das disciplinas.</span></div>
+            <div class="leg-row"><span class="rng">40–70</span><span class="badge bg-ac">Aceitável</span><span class="dsc">Adequado para treino a curta/média distância.</span></div>
+            <div class="leg-row"><span class="rng">70–100</span><span class="badge bg-po">Ruim</span><span class="dsc">Alta dispersão — revisar o processo.</span></div>
+            <div class="leg-row"><span class="rng">&gt; 100</span><span class="badge bg-cr">Crítico</span><span class="dsc">Problema grave na carga ou ignição.</span></div>
+          </div>
+          <div class="leg-card">
+            <div class="leg-card-title">⚡ Energia Cinética — ref. 5.56×45</div>
+            <div class="leg-row"><span class="rng">&gt; 1.700 J</span><span class="badge bg-ex">Alta</span><span class="dsc">Nível carga máxima / M193 (~3.240 fps).</span></div>
+            <div class="leg-row"><span class="rng">1.400–1.700 J</span><span class="badge bg-go">Padrão</span><span class="dsc">Faixa típica de recargas esportivas.</span></div>
+            <div class="leg-row"><span class="rng">1.000–1.400 J</span><span class="badge bg-ac">Reduzida</span><span class="dsc">Cargas de treino.</span></div>
+            <div class="leg-row"><span class="rng">&lt; 1.000 J</span><span class="badge bg-po">Baixa</span><span class="dsc">Verificar carga. Risco de obstrução.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── OBSERVAÇÕES ── -->
+    <div class="section">
+      <div class="section-title">📝 Observações e Notas Técnicas</div>
+      <div class="section-body">
+        <div class="g2" style="margin-bottom:10px">
+          <div><label>Prensa utilizada</label><input type="text" id="f_prensa" placeholder="Ex: Prensa O — Gun Ok"></div>
+          <div><label>Dies / Matrizes</label><input type="text" id="f_dies" placeholder="Ex: .223 Rem Ultimate Die Set"></div>
+          <div>
+            <label>Padrão de redimensionamento</label>
+            <select id="f_redim">
+              <option value="">— selecione —</option>
+              <option>Full Length</option><option>Full Length sem Neck Resizing</option>
+              <option>Neck Resizing apenas</option><option>Small Base Full Length</option>
+            </select>
+          </div>
+          <div>
+            <label>Condição dos estojos</label>
+            <select id="f_econd">
+              <option value="">— selecione —</option>
+              <option>Novos</option><option>1ª recarga</option><option>2ª recarga</option>
+              <option>3ª+ recargas</option><option>Misto</option>
+            </select>
+          </div>
+        </div>
+        <div><label>Observações gerais / Notas de segurança</label>
+          <textarea id="f_obs" placeholder="Ex: Lote L3182 apresentou velocidades elevadas. Somente 4 estojos com marcas leves na espoleta..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- bottom buttons -->
+    <div class="btn-row">
+      <button class="btn btn-back" onclick="goLanding()">← Voltar</button>
+      <button class="btn btn-clear" onclick="clearVel()">Limpar Velocidades</button>
+      <button class="btn btn-calc" onclick="calcAll()">⚡ Calcular</button>
+      <button class="btn btn-excel" onclick="exportExcel()">📊 Exportar Excel</button>
+    </div>
+
+    <div class="app-footer">
+      <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a> · Material de apoio ao curso de recarga ·
+      Confirme sempre com o manual do fabricante
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /app -->
+
+
+<script>
+/* ══════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════ */
+function openApp(){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('app').style.display='block';
+  window.scrollTo(0,0);
+}
+function goLanding(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('landing').style.display='block';
+  window.scrollTo(0,0);
+}
+
+/* ══════════════════════════════════════════
+   COMPONENT ROWS — 4 cargas
+══════════════════════════════════════════ */
+const ESPOLETA_OPTS=[
+  '1½ — Small Pistol','2½ — Large Pistol','5½ — Small Pistol Magnum',
+  '7½ — Small Rifle','9½ — Large Rifle','209 — Shotshell'
+];
+const COMP_ROWS=[
+  {id:'proj_fab',  lbl:'Fabricante do Projétil', type:'text'},
+  {id:'proj_tipo', lbl:'Tipo do Projétil',        type:'text'},
+  {id:'proj_peso', lbl:'Peso do Projétil (gr)',   type:'number'},
+  {id:'estojo',    lbl:'Estojo',                  type:'text'},
+  {id:'oal',       lbl:'OAL (pol.)',              type:'text'},
+  {id:'caselen',   lbl:'Case Length (pol.)',      type:'text'},
+  {id:'espoleta',  lbl:'Espoleta',               type:'select', opts:ESPOLETA_OPTS},
+  {id:'polvora',   lbl:'Pólvora / Lote',         type:'text'},
+  {id:'carga',     lbl:'Carga (grains)',          type:'number'},
+];
+
+function cellFor(r,s){
+  if(r.type==='select'){
+    return`<select id="c${s}_${r.id}">
+      <option value="">— selecione —</option>
+      ${r.opts.map(o=>`<option>${o}</option>`).join('')}
+    </select>`;
+  }
+  const t=r.type||'text';
+  return`<input type="${t}" id="c${s}_${r.id}" placeholder="C${s}">`;
+}
+
+function buildComponents(){
+  const c=document.getElementById('loads-rows');
+  c.innerHTML=COMP_ROWS.map(r=>`
+    <div class="loads-row" style="border-top:1px solid var(--border)">
+      <div>${r.lbl}</div>
+      <div>${cellFor(r,1)}</div>
+      <div>${cellFor(r,2)}</div>
+      <div>${cellFor(r,3)}</div>
+      <div>${cellFor(r,4)}</div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════════════════
+   VELOCITY GRID — 4 cargas
+══════════════════════════════════════════ */
+function buildVelGrid(){
+  const g=document.getElementById('vel-grid');
+  let h='';
+  for(let i=1;i<=10;i++){
+    h+=`<div class="vel-lbl">V0 Sessão ${i}</div>`;
+    for(let s=1;s<=4;s++){
+      h+=`<div class="vel-cell"><input type="number" id="v${s}_${i}" placeholder="—" min="0" max="6000" oninput="calcAll()"><span>fps</span></div>`;
+    }
+  }
+  g.innerHTML=h;
+}
+
+/* ══════════════════════════════════════════
+   MATH
+══════════════════════════════════════════ */
+function getVels(s){
+  const v=[];
+  for(let i=1;i<=10;i++){
+    const el=document.getElementById(`v${s}_${i}`);
+    if(el&&el.value!==''&&!isNaN(+el.value)&&+el.value>0)v.push(+el.value);
+  }return v;
+}
+const avg=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const hiV=a=>Math.max(...a);
+const loV=a=>Math.min(...a);
+function sdCalc(a){
+  if(a.length<2)return 0;
+  const m=avg(a);
+  return Math.sqrt(a.reduce((s,x)=>s+Math.pow(x-m,2),0)/(a.length-1));
+}
+const fps2ms=f=>f*0.3048;
+const gr2kg =g=>g*0.00006479891;
+function calcE(avgFps,grains){
+  if(!grains||isNaN(+grains)||+grains<=0)return null;
+  const v=fps2ms(avgFps),m=gr2kg(+grains);
+  return 0.5*m*v*v;
+}
+
+/* ══════════════════════════════════════════
+   BADGE HELPERS
+══════════════════════════════════════════ */
+function sdBadge(v){if(v<10)return['bg-ex','Excelente'];if(v<15)return['bg-go','Bom'];if(v<25)return['bg-ac','Aceitável'];if(v<35)return['bg-po','Ruim'];return['bg-cr','Crítico']}
+function esPctBadge(v){if(v<1.0)return['bg-ex','Excelente'];if(v<1.5)return['bg-go','Bom'];if(v<2.5)return['bg-ac','Aceitável'];if(v<3.5)return['bg-po','Ruim'];return['bg-cr','Crítico']}
+function esBadge(v){if(v<25)return['bg-ex','Excelente'];if(v<40)return['bg-go','Bom'];if(v<70)return['bg-ac','Aceitável'];if(v<100)return['bg-po','Ruim'];return['bg-cr','Crítico']}
+function bdg(cls,lbl){return`<span class="badge ${cls}">${lbl}</span>`}
+
+/* ══════════════════════════════════════════
+   RENDER ONE SERIE
+══════════════════════════════════════════ */
+function renderSerie(s,vals,grains){
+  const set=(id,html)=>{const el=document.getElementById(id);if(el)el.innerHTML=html};
+  if(!vals.length){
+    ['v','avg','ms','hi','lo','es','esp','sd','e'].forEach(k=>set(`r${s}_${k}`,'—'));return;
+  }
+  const H=hiV(vals),L=loV(vals),A=avg(vals),SD=sdCalc(vals),ES=H-L,ESP=(ES/A)*100;
+  const E=calcE(A,grains);
+  set(`r${s}_v`,`<span style="font-size:18px">${vals.length}</span>`);
+  set(`r${s}_avg`,`<span style="font-size:18px">${Math.round(A)}</span><span class="unit">fps</span>`);
+  set(`r${s}_ms`,`${fps2ms(A).toFixed(1)}<span class="unit">m/s</span>`);
+  set(`r${s}_hi`,`${H}<span class="unit">fps</span>`);
+  set(`r${s}_lo`,`${L}<span class="unit">fps</span>`);
+  const esB=esBadge(ES);
+  set(`r${s}_es`,`${ES}<span class="unit">fps</span> ${bdg(esB[0],esB[1])}`);
+  const espB=esPctBadge(ESP);
+  set(`r${s}_esp`,`${ESP.toFixed(2)}% ${bdg(espB[0],espB[1])}`);
+  const sdB=sdBadge(SD);
+  set(`r${s}_sd`,`${SD.toFixed(1)}<span class="unit">fps</span> ${bdg(sdB[0],sdB[1])}`);
+  set(`r${s}_e`,E!==null?`<span style="font-size:16px">${Math.round(E)}</span><span class="unit">J</span>`:'<span style="font-size:10px;color:var(--text2)">informar peso</span>');
+}
+
+/* ══════════════════════════════════════════
+   CALC ALL 4 SERIES
+══════════════════════════════════════════ */
+function calcAll(){
+  for(let s=1;s<=4;s++){
+    const vals=getVels(s);
+    const gr=document.getElementById(`c${s}_proj_peso`)?.value;
+    renderSerie(s,vals,gr);
+  }
+  // alert sobrepressão
+  const sob=document.getElementById('f_sobre')?.value;
+  const ext=document.getElementById('f_extra')?.value;
+  const al=[];
+  if(sob&&sob!=='NÃO')al.push(`Marcas de sobrepressão na espoleta (${sob}).`);
+  if(ext&&ext!=='NÃO')al.push(`Dificuldade na extração do estojo (${ext}).`);
+  const aBox=document.getElementById('alert_sobre');
+  const aTxt=document.getElementById('alert_txt');
+  if(al.length){aBox.style.display='block';aTxt.innerHTML=al.join(' ')+' <strong>Reduza a carga em 10% e refaça o teste antes de continuar.</strong>';}
+  else{aBox.style.display='none';}
+}
+
+function clearVel(){
+  for(let s=1;s<=4;s++)for(let i=1;i<=10;i++){const el=document.getElementById(`v${s}_${i}`);if(el)el.value='';}
+  calcAll();
+}
+
+/* ══════════════════════════════════════════
+   FIELD VALUE HELPER
+══════════════════════════════════════════ */
+const fv=id=>{const e=document.getElementById(id);return e?e.value:''};
+
+/* ══════════════════════════════════════════
+   EXCEL EXPORT (xlsx-js-style)
+══════════════════════════════════════════ */
+function exportExcel(){
+  if(typeof XLSX==='undefined'){alert('Biblioteca XLSX não carregada. Verifique sua conexão com a internet.');return;}
+
+  // ─── Styles ────────────────────────────
+  const ST={
+    title:{font:{bold:true,sz:18,color:{rgb:'C09A3A'},name:'Calibri'},fill:{fgColor:{rgb:'0B0B0F'}},alignment:{horizontal:'center',vertical:'center',wrapText:true}},
+    sub:{font:{sz:10,color:{rgb:'888880'},italic:true,name:'Calibri'},fill:{fgColor:{rgb:'0B0B0F'}},alignment:{horizontal:'center'}},
+    sec:{font:{bold:true,sz:12,color:{rgb:'C09A3A'},name:'Calibri'},fill:{fgColor:{rgb:'161622'}},border:{bottom:{style:'medium',color:{rgb:'8B7332'}}}},
+    hdr:{font:{bold:true,sz:10,color:{rgb:'FFFFFF'},name:'Calibri'},fill:{fgColor:{rgb:'1E1E2E'}},alignment:{horizontal:'center',vertical:'center'}},
+    key:{font:{bold:true,sz:10,color:{rgb:'AAAAAA'},name:'Calibri'},fill:{fgColor:{rgb:'13131A'}},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
+    val:{font:{sz:10,name:'Calibri'},fill:{fgColor:{rgb:'0E0E18'}},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
+    num:{font:{bold:true,sz:13,color:{rgb:'D4B050'},name:'Calibri'},fill:{fgColor:{rgb:'0E0E18'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
+    ex:{font:{bold:true,sz:10,color:{rgb:'81C784'},name:'Calibri'},fill:{fgColor:{rgb:'162016'}},alignment:{horizontal:'center'}},
+    go:{font:{bold:true,sz:10,color:{rgb:'AED581'},name:'Calibri'},fill:{fgColor:{rgb:'1A2210'}},alignment:{horizontal:'center'}},
+    ac:{font:{bold:true,sz:10,color:{rgb:'FFD54F'},name:'Calibri'},fill:{fgColor:{rgb:'1F1B07'}},alignment:{horizontal:'center'}},
+    po:{font:{bold:true,sz:10,color:{rgb:'FFB74D'},name:'Calibri'},fill:{fgColor:{rgb:'1F1007'}},alignment:{horizontal:'center'}},
+    cr:{font:{bold:true,sz:10,color:{rgb:'EF9A9A'},name:'Calibri'},fill:{fgColor:{rgb:'200808'}},alignment:{horizontal:'center'}},
+    disc:{font:{italic:true,sz:9,color:{rgb:'888880'},name:'Calibri'},fill:{fgColor:{rgb:'0D0D14'}},alignment:{wrapText:true,vertical:'top'}},
+  };
+
+  function c(v,s){return{v:v,t:'s',s:s||{}}}
+  function n(v,s){return{v:v||0,t:'n',s:s||ST.num}}
+
+  // ─── Collect results ─────────────────
+  function serie(s){
+    const vals=getVels(s),gr=fv(`c${s}_proj_peso`);
+    if(!vals.length)return{n:0};
+    const H=hiV(vals),L=loV(vals),A=avg(vals),SD=sdCalc(vals),ES=H-L,ESP=(ES/A)*100;
+    const E=calcE(A,gr);
+    const sdB=sdBadge(SD),espB=esPctBadge(ESP),esB=esBadge(ES);
+    return{n:vals.length,avg:Math.round(A),ms:+fps2ms(A).toFixed(1),H,L,ES,ESP:+ESP.toFixed(2),SD:+SD.toFixed(1),E:E!==null?Math.round(E):'',
+      sdRat:sdB[1],sdSt:ST[sdB[0].replace('bg-','')],espRat:espB[1],espSt:ST[espB[0].replace('bg-','')],esRat:esB[1],esSt:ST[esB[0].replace('bg-','')]};
+  }
+  const S=[null,serie(1),serie(2),serie(3),serie(4)];
+
+  // ─── Build rows ───────────────────────
+  const rows=[];
+  const R=(...cells)=>rows.push(cells);
+  const blank=()=>rows.push([]);
+
+  R(c('REGISTRO E ANÁLISE DE DADOS DE CRONÓGRAFO',ST.title));
+  R(c('Desenvolvido por @ale308win — instagram.com/ale308win',ST.sub));
+  R(c('Material de apoio aos alunos do curso de recarga | ale308win.github.io/recargas',ST.sub));
+  blank();
+
+  // ID
+  R(c('IDENTIFICAÇÃO DO TESTE',ST.sec));
+  R(c('Data',ST.key),c(fv('f_data'),ST.val),c('Atirador',ST.key),c(fv('f_atirador'),ST.val));
+  R(c('Calibre',ST.key),c(fv('f_calibre'),ST.val),c('Distância ao Crono',ST.key),c(fv('f_distancia'),ST.val));
+  blank();
+
+  // Arma
+  R(c('EQUIPAMENTO',ST.sec));
+  R(c('Tipo de Arma',ST.key),c(fv('f_tipo'),ST.val),c('Modelo',ST.key),c(fv('f_modelo'),ST.val));
+  R(c('Fabricante',ST.key),c(fv('f_fab'),ST.val),c('Cano',ST.key),c(fv('f_cano'),ST.val));
+  R(c('Cronógrafo',ST.key),c(fv('f_crono'),ST.val));
+  blank();
+
+  // Clima
+  R(c('CONDIÇÕES CLIMÁTICAS',ST.sec));
+  R(c('Clima',ST.key),c(fv('f_clima'),ST.val),c('Temperatura (°C)',ST.key),c(fv('f_temp')||'',ST.val));
+  R(c('Umidade (%)',ST.key),c(fv('f_umid')||'',ST.val),c('Altitude (m)',ST.key),c(fv('f_alt')||'',ST.val));
+  R(c('Vento',ST.key),c(fv('f_vento'),ST.val));
+  blank();
+
+  // Local
+  R(c('LOCAL',ST.sec));
+  R(c('Cidade',ST.key),c(fv('f_cidade'),ST.val),c('Estado',ST.key),c(fv('f_estado'),ST.val));
+  R(c('Clube/Estande',ST.key),c(fv('f_clube'),ST.val));
+  R(c('Marcas na espoleta',ST.key),c(fv('f_sobre'),ST.val),c('Dif. extração',ST.key),c(fv('f_extra'),ST.val));
+  blank();
+
+  // Componentes
+  R(c('COMPONENTES DAS CARGAS',ST.sec));
+  R(c('Componente',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
+  COMP_ROWS.forEach(r=>{
+    R(c(r.lbl,ST.key),c(fv(`c1_${r.id}`),ST.val),c(fv(`c2_${r.id}`),ST.val),c(fv(`c3_${r.id}`),ST.val),c(fv(`c4_${r.id}`),ST.val));
+  });
+  blank();
+
+  // Velocidades
+  R(c('VELOCIDADES REGISTRADAS (fps)',ST.sec));
+  R(c('Sessão',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
+  for(let i=1;i<=10;i++){
+    const cells=[c(`Sessão ${i}`,ST.key)];
+    for(let s=1;s<=4;s++){
+      const el=document.getElementById(`v${s}_${i}`);
+      const v=el&&el.value?+el.value:'';
+      cells.push(v!==''?n(v):c('—',ST.val));
+    }
+    rows.push(cells);
+  }
+  blank();
+
+  // Resultados
+  R(c('RESULTADOS CALCULADOS',ST.sec));
+  R(c('Métrica',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
+
+  function rRow(lbl,...vals_and_rats){
+    // vals_and_rats: alternating [value, {rat,st}] for each series, OR just value
+    const row=[c(lbl,ST.key)];
+    for(let s=1;s<=4;s++){
+      const sr=S[s];
+      const v=vals_and_rats[s-1];
+      if(typeof v==='object'&&v!==null&&'val' in v){
+        row.push(v.val!==''&&v.val!==undefined?n(v.val):c('—',ST.val));
+      } else {
+        row.push(v!==''&&v!==undefined&&v!==null?n(v):c('—',ST.val));
+      }
+    }
+    rows.push(row);
+  }
+
+  R(c('Válidos (n)',ST.key),n(S[1].n||0),n(S[2].n||0),n(S[3].n||0),n(S[4].n||0));
+  R(c('AVG (fps)',ST.key),n(S[1].avg||''),n(S[2].avg||''),n(S[3].avg||''),n(S[4].avg||''));
+  R(c('AVG (m/s)',ST.key),n(S[1].ms||''),n(S[2].ms||''),n(S[3].ms||''),n(S[4].ms||''));
+  R(c('HI (fps)',ST.key),n(S[1].H||''),n(S[2].H||''),n(S[3].H||''),n(S[4].H||''));
+  R(c('LO (fps)',ST.key),n(S[1].L||''),n(S[2].L||''),n(S[3].L||''),n(S[4].L||''));
+
+  // ES with rating
+  const esRow=[c('ES (fps)',ST.key)];
+  const espRow=[c('ES%',ST.key)];
+  const sdRow=[c('SD (fps)',ST.key)];
+  const eRow=[c('Energia (J)',ST.key)];
+  for(let s=1;s<=4;s++){
+    const sr=S[s];
+    if(sr.n){
+      esRow.push(n(sr.ES||0));esRow.push(c(sr.esRat||'',sr.esSt||{}));
+      espRow.push(n(sr.ESP||0));espRow.push(c(sr.espRat||'',sr.espSt||{}));
+      sdRow.push(n(sr.SD||0));sdRow.push(c(sr.sdRat||'',sr.sdSt||{}));
+      eRow.push(sr.E!==''&&sr.E!==undefined?n(sr.E):c('—',ST.val));eRow.push(c('',{}));
+    } else {
+      [esRow,espRow,sdRow,eRow].forEach(r=>{r.push(c('—',ST.val));r.push(c('',{}));});
+    }
+  }
+  rows.push(esRow);rows.push(espRow);rows.push(sdRow);rows.push(eRow);
+
+  blank();
+
+  // Observações
+  R(c('OBSERVAÇÕES',ST.sec));
+  R(c('Prensa',ST.key),c(fv('f_prensa'),ST.val),c('Dies',ST.key),c(fv('f_dies'),ST.val));
+  R(c('Redimensionamento',ST.key),c(fv('f_redim'),ST.val),c('Condição estojos',ST.key),c(fv('f_econd'),ST.val));
+  R(c('Notas gerais',ST.key),c(fv('f_obs'),{...ST.val,alignment:{wrapText:true}}));
+  blank();
+
+  // Disclaimers
+  R(c('AVISOS E RESPONSABILIDADES',{font:{bold:true,sz:11,color:{rgb:'FF8A50'},name:'Calibri'},fill:{fgColor:{rgb:'161622'}}}));
+  R(c('⚠ Dados de referência. Confirme com o manual do fabricante. Inicie com a carga mínima recomendada. O uso é de responsabilidade exclusiva do recarregador.',ST.disc));
+  R(c('🚫 A captura de dados deve ser realizada exclusivamente em estande de tiro habilitado. Uso em locais não autorizados é crime (Lei 10.826/2003 — Estatuto do Desarmamento).',ST.disc));
+
+  // ─── Workbook ────────────────────────
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:26},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14},{wch:14}];
+  ws['!merges']=[
+    {s:{r:0,c:0},e:{r:0,c:8}},
+    {s:{r:1,c:0},e:{r:1,c:8}},
+    {s:{r:2,c:0},e:{r:2,c:8}},
+  ];
+
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Registro');
+
+  // Reference sheet
+  const ref=[
+    [c('TABELA DE REFERÊNCIA — CRITÉRIOS ESTATÍSTICOS',ST.title)],
+    [c('Benchrest / F-Class / Competitive Shooters',ST.sub)],
+    [],
+    [c('DESVIO PADRÃO (SD) — fps',ST.sec)],
+    [c('Faixa',ST.hdr),c('Classificação',ST.hdr),c('Descrição',ST.hdr)],
+    [c('< 10 fps',ST.val),c('EXCELENTE',ST.ex),c('Nível competitivo / Benchrest.',ST.val)],
+    [c('10–15 fps',ST.val),c('BOM',ST.go),c('Precisão a longas distâncias (300m+).',ST.val)],
+    [c('15–25 fps',ST.val),c('ACEITÁVEL',ST.ac),c('Uso geral e treino.',ST.val)],
+    [c('25–35 fps',ST.val),c('RUIM',ST.po),c('Revisar OAL, crimp, espoleta.',ST.val)],
+    [c('> 35 fps',ST.val),c('CRÍTICO',ST.cr),c('Problema de ignição. Não usar.',ST.val)],
+    [],
+    [c('EXTREME SPREAD % (ES%)',ST.sec)],
+    [c('Faixa',ST.hdr),c('Classificação',ST.hdr),c('Descrição',ST.hdr)],
+    [c('< 1,0%',ST.val),c('EXCELENTE',ST.ex),c('Carga altamente uniforme.',ST.val)],
+    [c('1,0–1,5%',ST.val),c('BOM',ST.go),c('Consistência satisfatória.',ST.val)],
+    [c('1,5–2,5%',ST.val),c('ACEITÁVEL',ST.ac),c('Refinar processo.',ST.val)],
+    [c('2,5–3,5%',ST.val),c('RUIM',ST.po),c('Verificar pólvora, OAL, primer.',ST.val)],
+    [c('> 3,5%',ST.val),c('CRÍTICO',ST.cr),c('Não usar em competição.',ST.val)],
+    [],
+    [c('ES ABSOLUTO (ES) — fps',ST.sec)],
+    [c('Faixa',ST.hdr),c('Classificação',ST.hdr),c('Descrição',ST.hdr)],
+    [c('< 25 fps',ST.val),c('EXCELENTE',ST.ex),c('Benchrest / F-Class.',ST.val)],
+    [c('25–40 fps',ST.val),c('BOM',ST.go),c('Preciso para a maioria das disciplinas.',ST.val)],
+    [c('40–70 fps',ST.val),c('ACEITÁVEL',ST.ac),c('Treino a curta/média distância.',ST.val)],
+    [c('70–100 fps',ST.val),c('RUIM',ST.po),c('Alta dispersão.',ST.val)],
+    [c('> 100 fps',ST.val),c('CRÍTICO',ST.cr),c('Problema grave na carga.',ST.val)],
+  ];
+  const ws_ref=XLSX.utils.aoa_to_sheet(ref);
+  ws_ref['!cols']=[{wch:16},{wch:16},{wch:50}];
+  ws_ref['!merges']=[{s:{r:0,c:0},e:{r:0,c:2}},{s:{r:1,c:0},e:{r:1,c:2}}];
+  XLSX.utils.book_append_sheet(wb,ws_ref,'Referência');
+
+  const atirador=(fv('f_atirador')||'registro').replace(/\s+/g,'_');
+  const data=(fv('f_data')||new Date().toLocaleDateString('pt-BR')).replace(/\//g,'-');
+  XLSX.writeFile(wb,`cronografo_${atirador}_${data}.xlsx`);
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+buildComponents();
+buildVelGrid();
+
+// Trigger recalc when peso changes
+document.addEventListener('input',e=>{
+  if(e.target&&/c[1-4]_proj_peso/.test(e.target.id))calcAll();
+});
+</script>
+</body>
+</html>

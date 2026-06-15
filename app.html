@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cronógrafo · @ale308win</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx-js-style.min.js"></script>
+<style>
+/* ── RESET + VARS ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0b0f;--bg2:#101018;--bg3:#161622;--bg4:#1e1e2e;
+  --gold:#c09a3a;--gold-l:#d4b050;--gold-d:#8b7332;--gold-dim:rgba(192,154,58,.12);
+  --text:#ddd8c4;--text2:#999887;
+  --border:#2a2a3a;--border2:#383850;
+  --green:#2e7d32;--green-t:rgba(46,125,50,.2);
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:14px;line-height:1.4}
+a{color:var(--gold);text-decoration:none}a:hover{text-decoration:underline}
+input,select,textarea{font-family:'Rajdhani',sans-serif;font-size:13px}
+button{cursor:pointer}
+
+/* ── LOADING SCREEN ── */
+#loading{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;align-items:center;justify-content:center;z-index:999;
+}
+.load-icon{font-size:40px;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── HEADER ── */
+.app-header{
+  background:var(--bg2);border-bottom:2px solid var(--gold-d);
+  padding:0 20px;height:54px;display:flex;align-items:center;gap:14px;
+  position:sticky;top:0;z-index:100;
+}
+.h-logo{font-size:20px}
+.h-title{font-family:'Oswald',sans-serif;font-size:16px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase}
+.h-nav{display:flex;gap:4px;margin-left:auto}
+.h-btn{
+  background:none;border:1px solid var(--border);color:var(--text2);
+  font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:5px 12px;transition:all .2s;border-radius:2px;
+}
+.h-btn:hover{border-color:var(--gold-d);color:var(--gold)}
+.h-btn.active{background:var(--gold-dim);border-color:var(--gold-d);color:var(--gold)}
+.h-btn.new{background:var(--gold);color:#000;border-color:var(--gold)}
+.h-btn.new:hover{background:var(--gold-l)}
+.h-user{font-size:11px;color:var(--text2);margin-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+
+/* ── CONTAINER ── */
+.container{max-width:1200px;margin:0 auto;padding:18px 16px 50px}
+
+/* ── SECTIONS ── */
+.section{background:var(--bg3);border:1px solid var(--border);border-radius:4px;margin-bottom:12px;overflow:hidden}
+.section-title{
+  background:var(--bg4);border-bottom:1px solid var(--border);
+  color:var(--gold);font-family:'Oswald',sans-serif;font-weight:600;font-size:12px;letter-spacing:2px;
+  text-transform:uppercase;padding:9px 16px;display:flex;align-items:center;gap:8px;
+}
+.section-body{padding:14px 16px}
+
+/* ── FORM FIELDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 18px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px 18px}
+@media(max-width:768px){.g3,.g4{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){.g2,.g3,.g4{grid-template-columns:1fr}}
+label{display:block;font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px}
+input[type="text"],input[type="number"],input[type="date"],select,textarea{
+  width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:2px;
+  padding:6px 8px;color:var(--text);transition:border-color .2s;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold-d);background:#0d0d14}
+select{cursor:pointer}select option{background:var(--bg4)}
+textarea{resize:vertical;min-height:60px}
+.sub-lbl{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;border-bottom:1px solid var(--gold-d);padding-bottom:4px;margin-bottom:9px}
+
+/* ── 5-COL TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.loads-head{display:grid;grid-template-columns:150px 1fr 1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px 3px 0 0;overflow:hidden;min-width:580px}
+.loads-head>div{background:var(--bg4);color:var(--gold);font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;padding:8px 10px;text-align:center}
+.loads-head>div:first-child{text-align:left;font-size:10px}
+.loads-row{display:grid;grid-template-columns:150px 1fr 1fr 1fr 1fr;gap:1px;background:var(--border);border-left:1px solid var(--border);border-right:1px solid var(--border);min-width:580px}
+.loads-row:last-child{border-bottom:1px solid var(--border);border-radius:0 0 3px 3px}
+.loads-row>div{background:var(--bg3);padding:4px 8px}
+.loads-row>div:first-child{background:var(--bg4);display:flex;align-items:center;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase}
+.loads-row:nth-child(odd)>div{background:#0f0f18}
+.loads-row:nth-child(odd)>div:first-child{background:#12121e}
+.loads-row input,.loads-row select{font-size:11px;padding:3px 6px}
+
+/* ── VELOCITY GRID ── */
+.vel-head{display:grid;grid-template-columns:110px 1fr 1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px 3px 0 0;overflow:hidden;min-width:560px}
+.vel-head>div{background:var(--bg4);color:var(--gold);font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:.8px;padding:7px 8px;text-align:center}
+.vel-head>div:first-child{text-align:left;font-size:10px}
+.vel-grid{display:grid;grid-template-columns:110px 1fr 1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:0 0 3px 3px;overflow:hidden;min-width:560px}
+.vel-lbl{background:var(--bg4);display:flex;align-items:center;padding:4px 8px;font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--text2)}
+.vel-cell{background:var(--bg3);padding:3px 6px;display:flex;align-items:center;gap:4px}
+.vel-cell span{font-size:9px;color:var(--text2);white-space:nowrap;font-family:'Share Tech Mono',monospace}
+.vel-cell input{flex:1;text-align:center;font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:600;color:var(--gold-l);min-width:0}
+
+/* ── RESULTS ── */
+.out-grid{display:grid;grid-template-columns:185px 1fr 1fr 1fr 1fr;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden;min-width:620px}
+.out-lbl{background:#0d0d18;color:var(--text2);font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:8px 10px;display:flex;align-items:center;gap:5px}
+.out-val{background:var(--bg3);padding:8px 8px;font-family:'Share Tech Mono',monospace;font-size:14px;font-weight:700;color:var(--gold-l);display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;flex-wrap:wrap}
+.out-val.alt{background:#0f0f1c;font-size:12px;color:var(--text2)}
+.unit{font-size:9px;font-weight:400;color:var(--text2);font-family:'Rajdhani',sans-serif}
+.tip-wrap{position:relative;display:inline-flex;align-items:center}
+.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--gold-d);color:var(--bg);font-size:9px;font-weight:900;cursor:help;flex-shrink:0;margin-left:4px}
+.tip-box{display:none;position:absolute;left:20px;top:-4px;z-index:100;background:#1a1a2a;color:var(--text2);font-size:11px;line-height:1.45;padding:8px 12px;border-radius:4px;width:220px;box-shadow:0 4px 20px rgba(0,0,0,.7);border:1px solid var(--border2);pointer-events:none}
+.tip-wrap:hover .tip-box{display:block}
+
+/* ── BADGES ── */
+.badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.3px;white-space:nowrap}
+.bg-ex{background:rgba(46,125,50,.25);color:#81c784;border:1px solid rgba(46,125,50,.4)}
+.bg-go{background:rgba(124,179,66,.2);color:#aed581;border:1px solid rgba(124,179,66,.35)}
+.bg-ac{background:rgba(249,168,37,.2);color:#ffd54f;border:1px solid rgba(249,168,37,.35)}
+.bg-po{background:rgba(230,81,0,.2);color:#ffb74d;border:1px solid rgba(230,81,0,.35)}
+.bg-cr{background:rgba(198,40,40,.25);color:#ef9a9a;border:1px solid rgba(198,40,40,.4)}
+
+/* ── ALERT ── */
+.alert-box{display:none;border:1px solid rgba(230,81,0,.4);border-left:3px solid #e65100;background:rgba(230,81,0,.1);padding:11px 15px;margin-top:10px;border-radius:0 3px 3px 0}
+.alert-box h4{font-family:'Oswald',sans-serif;font-size:12px;color:#ff8a50;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px}
+.alert-box p{font-size:12px;color:#ffb74d;line-height:1.5}
+.info-box{border:1px solid var(--border2);border-left:3px solid var(--gold-d);background:rgba(192,154,58,.05);padding:11px 15px;margin-top:10px;border-radius:0 3px 3px 0}
+.info-box h4{font-family:'Oswald',sans-serif;font-size:11px;color:var(--gold);margin-bottom:5px;letter-spacing:.5px;text-transform:uppercase}
+.info-box p{font-size:12px;color:var(--text2);line-height:1.55}
+.info-box.warn{border-left-color:#e65100}.info-box.warn h4{color:#ff8a50}
+
+/* ── METRICS TABLE ── */
+.metrics-tbl{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:6px}
+.metrics-tbl th{background:var(--bg4);color:var(--gold);font-family:'Oswald',sans-serif;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:9px 12px;text-align:left;border-bottom:2px solid var(--gold-d);white-space:nowrap}
+.metrics-tbl td{padding:7px 12px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45}
+.metrics-tbl tr:last-child td{border-bottom:none}
+.metrics-tbl tr:hover td{background:rgba(192,154,58,.03)}
+.m-name{font-family:'Share Tech Mono',monospace;font-size:13px;font-weight:700;color:var(--gold-l);white-space:nowrap}
+.m-form{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);white-space:nowrap}
+.m-ref{color:var(--text2);font-size:11px;font-style:italic}
+
+/* ── LEGEND ── */
+.leg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+@media(max-width:700px){.leg-grid{grid-template-columns:1fr}}
+.leg-card{border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.leg-card-title{background:var(--bg4);color:var(--gold);font-family:'Oswald',sans-serif;font-size:11px;font-weight:600;letter-spacing:1px;padding:7px 12px;text-transform:uppercase}
+.leg-row{display:flex;align-items:center;gap:8px;padding:5px 12px;border-bottom:1px solid var(--border);font-size:11px}
+.leg-row:last-child{border-bottom:none}
+.leg-row .rng{font-family:'Share Tech Mono',monospace;font-weight:700;min-width:68px;color:var(--text);font-size:10px}
+.leg-row .dsc{color:var(--text2);font-size:11px}
+
+/* ── BUTTONS ── */
+.btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.btn{padding:9px 20px;border:none;border-radius:2px;font-family:'Oswald',sans-serif;font-size:13px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .2s;white-space:nowrap}
+.btn:hover{filter:brightness(1.12)}.btn:active{transform:scale(.97)}
+.btn-save{background:var(--gold);color:#000}
+.btn-excel{background:#1d3b1d;color:#81c784;border:1px solid #2e7d32}
+.btn-calc{background:#0d2030;color:#64b5f6;border:1px solid #1565c0}
+.btn-clear{background:var(--bg4);color:var(--text2);border:1px solid var(--border2)}
+.btn-back{background:transparent;color:var(--text2);border:1px solid var(--border2);font-size:11px;padding:7px 14px}
+.btn-del{background:rgba(198,40,40,.15);color:#ef9a9a;border:1px solid rgba(198,40,40,.35)}
+
+/* ── FORM BAR (new/edit indicator) ── */
+.form-bar{
+  background:var(--bg2);border-bottom:1px solid var(--border);
+  padding:10px 16px;display:flex;align-items:center;gap:12px;
+  flex-wrap:wrap;
+}
+.form-bar-title{font-family:'Oswald',sans-serif;font-size:14px;color:var(--gold);letter-spacing:1px}
+.form-bar-sub{font-size:11px;color:var(--text2)}
+.form-bar .btn-row{margin-top:0;margin-left:auto}
+
+/* ── DASHBOARD ── */
+.dash-search{
+  background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+  padding:14px 16px;margin-bottom:14px;
+}
+.dash-search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.search-field{flex:1;min-width:160px}
+.search-field label{display:block;font-size:10px;font-weight:700;color:var(--text2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:3px}
+.dash-empty{
+  text-align:center;padding:60px 20px;
+  font-family:'Oswald',sans-serif;color:var(--text2);
+}
+.dash-empty-icon{font-size:40px;margin-bottom:10px}
+.dash-empty-title{font-size:18px;letter-spacing:1px;color:var(--text);margin-bottom:6px}
+.dash-empty-sub{font-size:13px;line-height:1.5}
+.session-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.session-card{
+  background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+  padding:16px;transition:border-color .2s;cursor:default;
+}
+.session-card:hover{border-color:var(--gold-d)}
+.sc-cal{font-family:'Oswald',sans-serif;font-size:20px;color:var(--gold-l);font-weight:700;letter-spacing:.5px;margin-bottom:4px}
+.sc-meta{font-size:12px;color:var(--text2);margin-bottom:8px;line-height:1.6}
+.sc-meta strong{color:var(--text)}
+.sc-badge{margin-bottom:10px;display:flex;gap:6px;flex-wrap:wrap}
+.sc-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+.sc-btn{
+  padding:5px 12px;border:1px solid var(--border2);background:var(--bg4);
+  color:var(--text2);font-family:'Oswald',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;
+  border-radius:2px;transition:all .2s;cursor:pointer;
+}
+.sc-btn:hover{border-color:var(--gold-d);color:var(--gold)}
+.sc-btn.del:hover{border-color:rgba(198,40,40,.5);color:#ef9a9a}
+.sc-btn.edit{background:var(--gold-dim);border-color:var(--gold-d);color:var(--gold)}
+
+/* ── PROFILE MODAL ── */
+.modal-overlay{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  align-items:center;justify-content:center;padding:20px;
+}
+.modal-overlay.show{display:flex}
+.modal-box{
+  background:var(--bg3);border:1px solid var(--border2);border-radius:6px;
+  padding:28px;max-width:460px;width:100%;max-height:85vh;overflow-y:auto;
+  box-shadow:0 10px 50px rgba(0,0,0,.7);
+}
+.modal-title{font-family:'Oswald',sans-serif;font-size:16px;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center}
+.modal-close{background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:2px 6px}
+.modal-close:hover{color:var(--text)}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:24px;right:24px;z-index:500;
+  background:#1e2e1e;border:1px solid rgba(46,125,50,.5);color:#81c784;
+  padding:12px 20px;border-radius:4px;font-size:13px;font-family:'Rajdhani',sans-serif;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);transition:opacity .3s;opacity:0;pointer-events:none;
+}
+#toast.show{opacity:1}
+#toast.err{background:#2e1e1e;border-color:rgba(198,40,40,.5);color:#ef9a9a}
+
+/* ── DISC BAR ── */
+.app-disc{background:rgba(192,154,58,.05);border:1px solid var(--border);border-left:3px solid var(--gold-d);padding:8px 14px;margin-bottom:12px;border-radius:0 3px 3px 0}
+.app-disc p{font-size:11px;color:var(--text2);line-height:1.5}
+
+/* ── FOOTER ── */
+.app-footer{text-align:center;padding:14px;font-size:11px;color:var(--text2);border-top:1px solid var(--border);margin-top:8px}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading"><div class="load-icon">🎯</div></div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <span class="h-logo">🎯</span>
+    <span class="h-title">Cronógrafo</span>
+    <div class="h-nav">
+      <button class="h-btn active" id="nav-dash" onclick="showView('dashboard')">Minhas Sessões</button>
+      <button class="h-btn new"          onclick="newSession()">+ Nova Sessão</button>
+      <button class="h-btn"              onclick="openProfile()">Perfil</button>
+      <button class="h-btn"              onclick="doLogout()">Sair</button>
+    </div>
+    <span class="h-user" id="h-user-name">—</span>
+  </header>
+
+  <!-- ══════════════════════════════════════
+       DASHBOARD VIEW
+  ══════════════════════════════════════ -->
+  <div id="view-dashboard" class="container">
+
+    <div class="app-disc">
+      <p>⚠ <strong>Dados de referência.</strong> Confirme sempre com o manual do fabricante. Nunca exceda a carga máxima. Responsabilidade exclusiva do recarregador. <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a></p>
+    </div>
+
+    <!-- Search -->
+    <div class="dash-search">
+      <div class="dash-search-row">
+        <div class="search-field" style="flex:2">
+          <label>Calibre</label>
+          <input type="text" id="s_cal" placeholder="Ex: 5.56×45, .308..." oninput="filterSessions()">
+        </div>
+        <div class="search-field">
+          <label>Data inicial</label>
+          <input type="date" id="s_from" onchange="filterSessions()">
+        </div>
+        <div class="search-field">
+          <label>Data final</label>
+          <input type="date" id="s_to" onchange="filterSessions()">
+        </div>
+        <div class="search-field">
+          <label>Estado</label>
+          <select id="s_state" onchange="filterSessions()">
+            <option value="">Todos</option>
+            <option>AC</option><option>AL</option><option>AP</option><option>AM</option>
+            <option>BA</option><option>CE</option><option>DF</option><option>ES</option>
+            <option>GO</option><option>MA</option><option>MT</option><option>MS</option>
+            <option>MG</option><option>PA</option><option>PB</option><option>PR</option>
+            <option>PE</option><option>PI</option><option>RJ</option><option>RN</option>
+            <option>RS</option><option>RO</option><option>RR</option><option>SC</option>
+            <option>SP</option><option>SE</option><option>TO</option>
+          </select>
+        </div>
+        <div class="search-field" style="flex:0">
+          <label>&nbsp;</label>
+          <button class="btn btn-back" onclick="clearSearch()">Limpar</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="session-count" style="font-size:11px;color:var(--text2);margin-bottom:10px"></div>
+    <div id="session-grid" class="session-grid"></div>
+
+  </div><!-- /view-dashboard -->
+
+  <!-- ══════════════════════════════════════
+       FORM VIEW (new / edit)
+  ══════════════════════════════════════ -->
+  <div id="view-form" style="display:none">
+
+    <div class="form-bar">
+      <div>
+        <div class="form-bar-title" id="form-bar-title">Nova Sessão</div>
+        <div class="form-bar-sub"   id="form-bar-sub">Preencha os dados e clique em Salvar</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-back"  onclick="showView('dashboard')">← Voltar</button>
+        <button class="btn btn-clear" onclick="clearVel()">Limpar Velocidades</button>
+        <button class="btn btn-calc"  onclick="calcAll()">⚡ Calcular</button>
+        <button class="btn btn-excel" onclick="exportExcel()">📊 Excel</button>
+        <button class="btn btn-save"  onclick="saveSession()">💾 Salvar Sessão</button>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- IDENTIFICAÇÃO -->
+      <div class="section">
+        <div class="section-title">🗂 Identificação do Teste</div>
+        <div class="section-body">
+          <div class="g4">
+            <div><label>Data</label><input type="text" id="f_data" placeholder="DD/MM/AAAA"></div>
+            <div><label>Atirador / Recarregador</label><input type="text" id="f_atirador"></div>
+            <div><label>Calibre</label><input type="text" id="f_calibre" placeholder="Ex: 5.56×45"></div>
+            <div><label>Distância ao Crono</label><input type="text" id="f_distancia" placeholder="Ex: 2 metros"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EQUIPAMENTO -->
+      <div class="section">
+        <div class="section-title">🔫 Equipamento &amp; Condições</div>
+        <div class="section-body">
+          <div class="g3">
+            <div>
+              <div class="sub-lbl">Arma</div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <div><label>Tipo</label>
+                  <select id="f_tipo">
+                    <option value="">— selecione —</option>
+                    <option>Pistola</option><option>Revólver</option><option>Carabina</option>
+                    <option>Fuzil</option><option>Rifle</option><option>Espingarda</option>
+                  </select>
+                </div>
+                <div><label>Modelo</label><input type="text" id="f_modelo" placeholder="Ex: T4, AR-15"></div>
+                <div><label>Fabricante</label><input type="text" id="f_fab"></div>
+                <div><label>Comprimento do Cano</label><input type="text" id="f_cano" placeholder='Ex: 368 mm'></div>
+                <div><label>Cronógrafo</label><input type="text" id="f_crono" placeholder="Ex: Caldwell"></div>
+              </div>
+            </div>
+            <div>
+              <div class="sub-lbl">Clima</div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <div><label>Clima</label>
+                  <select id="f_clima">
+                    <option value="">— selecione —</option>
+                    <option>Ensolarado</option><option>Nublado</option>
+                    <option>Chuva</option><option>Indoor</option>
+                  </select>
+                </div>
+                <div><label>Temperatura (°C)</label><input type="number" id="f_temp"></div>
+                <div><label>Umidade (%)</label><input type="number" id="f_umid"></div>
+                <div><label>Altitude (m)</label><input type="number" id="f_alt"></div>
+                <div><label>Vento</label><input type="text" id="f_vento" placeholder="Ex: Calmo"></div>
+              </div>
+            </div>
+            <div>
+              <div class="sub-lbl">Local</div>
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <div><label>Cidade</label><input type="text" id="f_cidade" placeholder="Ex: Itatiba"></div>
+                <div><label>Estado</label>
+                  <select id="f_estado">
+                    <option value="">— selecione —</option>
+                    <option>AC — Acre</option><option>AL — Alagoas</option><option>AP — Amapá</option>
+                    <option>AM — Amazonas</option><option>BA — Bahia</option><option>CE — Ceará</option>
+                    <option>DF — Distrito Federal</option><option>ES — Espírito Santo</option><option>GO — Goiás</option>
+                    <option>MA — Maranhão</option><option>MT — Mato Grosso</option><option>MS — Mato Grosso do Sul</option>
+                    <option>MG — Minas Gerais</option><option>PA — Pará</option><option>PB — Paraíba</option>
+                    <option>PR — Paraná</option><option>PE — Pernambuco</option><option>PI — Piauí</option>
+                    <option>RJ — Rio de Janeiro</option><option>RN — Rio Grande do Norte</option>
+                    <option>RS — Rio Grande do Sul</option><option>RO — Rondônia</option><option>RR — Roraima</option>
+                    <option>SC — Santa Catarina</option><option>SP — São Paulo</option>
+                    <option>SE — Sergipe</option><option>TO — Tocantins</option>
+                  </select>
+                </div>
+                <div><label>Clube / Estande</label><input type="text" id="f_clube" placeholder="Ex: Cartucho"></div>
+                <div><label>Marcas na espoleta?</label>
+                  <select id="f_sobre" onchange="calcAll()">
+                    <option value="">— selecione —</option>
+                    <option>NÃO</option><option>SIM – em algumas</option>
+                    <option>SIM – em todas</option><option>SIM – em uma</option>
+                  </select>
+                </div>
+                <div><label>Dificuldade na extração?</label>
+                  <select id="f_extra" onchange="calcAll()">
+                    <option value="">— selecione —</option>
+                    <option>NÃO</option><option>SIM – leve</option><option>SIM – severa</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMPONENTES -->
+      <div class="section">
+        <div class="section-title">🔩 Componentes das Cargas</div>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <div class="loads-head">
+              <div>Componente</div>
+              <div>CARGA 1</div><div>CARGA 2</div><div>CARGA 3</div><div>CARGA 4</div>
+            </div>
+            <div id="loads-rows"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VELOCIDADES -->
+      <div class="section">
+        <div class="section-title">📡 Velocidades (fps)</div>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <div class="vel-head">
+              <div>Sessão</div>
+              <div>CARGA 1</div><div>CARGA 2</div><div>CARGA 3</div><div>CARGA 4</div>
+            </div>
+            <div class="vel-grid" id="vel-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESULTADOS -->
+      <div class="section">
+        <div class="section-title">📊 Resultados Calculados</div>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <div class="out-grid">
+              <div class="out-lbl" style="background:#0a0a12;font-size:10px;letter-spacing:1.5px">MÉTRICA</div>
+              <div class="out-val" style="background:#0c0c16;font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);letter-spacing:1px">CARGA 1</div>
+              <div class="out-val" style="background:#0c0c16;font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);letter-spacing:1px">CARGA 2</div>
+              <div class="out-val" style="background:#0c0c16;font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);letter-spacing:1px">CARGA 3</div>
+              <div class="out-val" style="background:#0c0c16;font-family:'Oswald',sans-serif;font-size:12px;color:var(--gold);letter-spacing:1px">CARGA 4</div>
+
+              <div class="out-lbl"><span class="tip-wrap">VÁLIDOS (n)<span class="tip-icon">?</span><span class="tip-box">Nº disparos com leitura válida. Mín. 5; ideal ≥ 10.</span></span></div>
+              <div class="out-val" id="r1_v">—</div><div class="out-val" id="r2_v">—</div><div class="out-val" id="r3_v">—</div><div class="out-val" id="r4_v">—</div>
+
+              <div class="out-lbl"><span class="tip-wrap">AVG — Vel. Média<span class="tip-icon">?</span><span class="tip-box">Média aritmética (fps). Compare com o manual do fabricante.</span></span></div>
+              <div class="out-val" id="r1_avg">—</div><div class="out-val" id="r2_avg">—</div><div class="out-val" id="r3_avg">—</div><div class="out-val" id="r4_avg">—</div>
+
+              <div class="out-lbl" style="background:#0a0a14"><span style="font-size:10px;color:var(--text2)">AVG em m/s</span></div>
+              <div class="out-val alt" id="r1_ms">—</div><div class="out-val alt" id="r2_ms">—</div><div class="out-val alt" id="r3_ms">—</div><div class="out-val alt" id="r4_ms">—</div>
+
+              <div class="out-lbl"><span class="tip-wrap">HI — Maior Vel.<span class="tip-icon">?</span><span class="tip-box">Maior leitura. Nunca deve ultrapassar o limite máximo do manual.</span></span></div>
+              <div class="out-val" id="r1_hi">—</div><div class="out-val" id="r2_hi">—</div><div class="out-val" id="r3_hi">—</div><div class="out-val" id="r4_hi">—</div>
+
+              <div class="out-lbl"><span class="tip-wrap">LO — Menor Vel.<span class="tip-icon">?</span><span class="tip-box">Menor leitura. Valores baixos indicam ignição fraca ou pólvora comprometida.</span></span></div>
+              <div class="out-val" id="r1_lo">—</div><div class="out-val" id="r2_lo">—</div><div class="out-val" id="r3_lo">—</div><div class="out-val" id="r4_lo">—</div>
+
+              <div class="out-lbl"><span class="tip-wrap">ES — Extreme Spread<span class="tip-icon">?</span><span class="tip-box">HI − LO (fps). Amplitude total. Sensível a outliers.</span></span></div>
+              <div class="out-val" id="r1_es">—</div><div class="out-val" id="r2_es">—</div><div class="out-val" id="r3_es">—</div><div class="out-val" id="r4_es">—</div>
+
+              <div class="out-lbl"><span class="tip-wrap">ES%<span class="tip-icon">?</span><span class="tip-box">ES / AVG × 100. ES normalizado pela velocidade média.</span></span></div>
+              <div class="out-val" id="r1_esp">—</div><div class="out-val" id="r2_esp">—</div><div class="out-val" id="r3_esp">—</div><div class="out-val" id="r4_esp">—</div>
+
+              <div class="out-lbl"><span class="tip-wrap">SD — Desvio Padrão<span class="tip-icon">?</span><span class="tip-box">√[Σ(vi−AVG)²/(n−1)]. Principal indicador de consistência.</span></span></div>
+              <div class="out-val" id="r1_sd">—</div><div class="out-val" id="r2_sd">—</div><div class="out-val" id="r3_sd">—</div><div class="out-val" id="r4_sd">—</div>
+
+              <div class="out-lbl"><span class="tip-wrap">Energia Cinética (J)<span class="tip-icon">?</span><span class="tip-box">½ × m(kg) × v²(m/s). Calculada com o peso do projétil.</span></span></div>
+              <div class="out-val" id="r1_e">—</div><div class="out-val" id="r2_e">—</div><div class="out-val" id="r3_e">—</div><div class="out-val" id="r4_e">—</div>
+            </div>
+          </div>
+          <div class="alert-box" id="alert_sobre">
+            <h4>⚠ Sinais de Sobrepressão Detectados</h4>
+            <p id="alert_txt"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÉTRICAS -->
+      <div class="section">
+        <div class="section-title">🔬 Interpretação das Métricas</div>
+        <div class="section-body">
+          <div class="tbl-wrap">
+            <table class="metrics-tbl">
+              <thead><tr><th>Métrica</th><th>Fórmula</th><th>O que mede</th><th>Leitura / Ação</th></tr></thead>
+              <tbody>
+                <tr><td><span class="m-name">n Válidos</span></td><td><span class="m-form">contagem</span></td><td>Nº disparos com V0 aceita pelo crono</td><td><span class="m-ref">≥ 5 mín; ≥ 10 para análise confiável</span></td></tr>
+                <tr><td><span class="m-name">AVG (fps)</span></td><td><span class="m-form">Σvᵢ / n</span></td><td>Velocidade média da série</td><td><span class="m-ref">Compare com tabela do manual. V0 acima do esperado indica sobrepressão</span></td></tr>
+                <tr><td><span class="m-name">AVG (m/s)</span></td><td><span class="m-form">AVG × 0,3048</span></td><td>Velocidade média no SI</td><td><span class="m-ref">Usado no cálculo de energia; padrão europeu</span></td></tr>
+                <tr><td><span class="m-name">HI (fps)</span></td><td><span class="m-form">max(vᵢ)</span></td><td>Maior velocidade registrada</td><td><span class="m-ref">Nunca ultrapassar V0 máxima do manual</span></td></tr>
+                <tr><td><span class="m-name">LO (fps)</span></td><td><span class="m-form">min(vᵢ)</span></td><td>Menor velocidade registrada</td><td><span class="m-ref">LO baixo indica ignição fraca ou falha de espoleta</span></td></tr>
+                <tr><td><span class="m-name">ES (fps)</span></td><td><span class="m-form">HI − LO</span></td><td>Amplitude total de variação</td><td><span class="m-ref">Sensível a outliers. Use junto com SD</span></td></tr>
+                <tr><td><span class="m-name">ES%</span></td><td><span class="m-form">(ES/AVG)×100</span></td><td>ES relativo à velocidade média</td><td><span class="m-ref">Permite comparar cargas de velocidades diferentes</span></td></tr>
+                <tr><td><span class="m-name">SD (fps)</span></td><td><span class="m-form">√[Σ(vᵢ−AVG)²/(n−1)]</span></td><td>Desvio padrão amostral</td><td><span class="m-ref">Principal indicador. Considera todos os disparos; mais robusto que ES</span></td></tr>
+                <tr><td><span class="m-name">Energia (J)</span></td><td><span class="m-form">½ × m(kg) × v²(m/s)</span></td><td>Energia cinética do projétil</td><td><span class="m-ref">Referência terminal balística e classificação legal</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="info-box">
+            <h4>💡 SD vs ES — qual usar?</h4>
+            <p>SD avalia <em>todos</em> os disparos e é mais robusto. ES é calculado com apenas dois pontos (HI e LO), sendo distorcido por um único outlier. Use SD como indicador primário e ES como sinal de alerta. ES alto com SD baixo = disparo isolado anômalo.</p>
+          </div>
+          <div class="info-box warn">
+            <h4>⚠ Sinais de Sobrepressão</h4>
+            <p>Espoleta achatada, extrusão ao percussor, dificuldade de extração, velocidade inesperadamente alta. Ao detectar qualquer sinal: <strong>PARE, reduza a carga em 10% e refaça o teste.</strong></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEGENDA -->
+      <div class="section">
+        <div class="section-title">📖 Referência Estatística</div>
+        <div class="section-body">
+          <div class="leg-grid">
+            <div class="leg-card">
+              <div class="leg-card-title">🎯 SD — Desvio Padrão (fps)</div>
+              <div class="leg-row"><span class="rng">&lt; 10</span><span class="badge bg-ex">Excelente</span><span class="dsc">Benchrest / F-Class</span></div>
+              <div class="leg-row"><span class="rng">10–15</span><span class="badge bg-go">Bom</span><span class="dsc">Longas distâncias (300m+)</span></div>
+              <div class="leg-row"><span class="rng">15–25</span><span class="badge bg-ac">Aceitável</span><span class="dsc">Uso geral</span></div>
+              <div class="leg-row"><span class="rng">25–35</span><span class="badge bg-po">Ruim</span><span class="dsc">Revisar componentes</span></div>
+              <div class="leg-row"><span class="rng">&gt; 35</span><span class="badge bg-cr">Crítico</span><span class="dsc">Problema de ignição</span></div>
+            </div>
+            <div class="leg-card">
+              <div class="leg-card-title">📏 ES% — Extreme Spread %</div>
+              <div class="leg-row"><span class="rng">&lt; 1,0%</span><span class="badge bg-ex">Excelente</span><span class="dsc">Carga altamente uniforme</span></div>
+              <div class="leg-row"><span class="rng">1,0–1,5%</span><span class="badge bg-go">Bom</span><span class="dsc">Consistência satisfatória</span></div>
+              <div class="leg-row"><span class="rng">1,5–2,5%</span><span class="badge bg-ac">Aceitável</span><span class="dsc">Treino e caça</span></div>
+              <div class="leg-row"><span class="rng">2,5–3,5%</span><span class="badge bg-po">Ruim</span><span class="dsc">Verificar pólvora, OAL</span></div>
+              <div class="leg-row"><span class="rng">&gt; 3,5%</span><span class="badge bg-cr">Crítico</span><span class="dsc">Não usar em competição</span></div>
+            </div>
+            <div class="leg-card">
+              <div class="leg-card-title">↔ ES Absoluto (fps)</div>
+              <div class="leg-row"><span class="rng">&lt; 25</span><span class="badge bg-ex">Excelente</span><span class="dsc">Benchrest</span></div>
+              <div class="leg-row"><span class="rng">25–40</span><span class="badge bg-go">Bom</span><span class="dsc">Maioria das disciplinas</span></div>
+              <div class="leg-row"><span class="rng">40–70</span><span class="badge bg-ac">Aceitável</span><span class="dsc">Curta/média distância</span></div>
+              <div class="leg-row"><span class="rng">70–100</span><span class="badge bg-po">Ruim</span><span class="dsc">Revisar processo</span></div>
+              <div class="leg-row"><span class="rng">&gt; 100</span><span class="badge bg-cr">Crítico</span><span class="dsc">Problema grave</span></div>
+            </div>
+            <div class="leg-card">
+              <div class="leg-card-title">⚡ Energia (ref. 5.56×45)</div>
+              <div class="leg-row"><span class="rng">&gt; 1.700 J</span><span class="badge bg-ex">Alta</span><span class="dsc">Carga máxima / M193</span></div>
+              <div class="leg-row"><span class="rng">1.400–1.700 J</span><span class="badge bg-go">Padrão</span><span class="dsc">Faixa típica esportiva</span></div>
+              <div class="leg-row"><span class="rng">1.000–1.400 J</span><span class="badge bg-ac">Reduzida</span><span class="dsc">Cargas de treino</span></div>
+              <div class="leg-row"><span class="rng">&lt; 1.000 J</span><span class="badge bg-po">Baixa</span><span class="dsc">Verificar carga</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- OBSERVAÇÕES -->
+      <div class="section">
+        <div class="section-title">📝 Observações</div>
+        <div class="section-body">
+          <div class="g2" style="margin-bottom:10px">
+            <div><label>Prensa</label><input type="text" id="f_prensa" placeholder="Ex: Prensa O"></div>
+            <div><label>Dies / Matrizes</label><input type="text" id="f_dies"></div>
+            <div><label>Redimensionamento</label>
+              <select id="f_redim">
+                <option value="">— selecione —</option>
+                <option>Full Length</option><option>Full Length sem Neck Resizing</option>
+                <option>Neck Resizing apenas</option><option>Small Base Full Length</option>
+              </select>
+            </div>
+            <div><label>Condição dos estojos</label>
+              <select id="f_econd">
+                <option value="">— selecione —</option>
+                <option>Novos</option><option>1ª recarga</option><option>2ª recarga</option>
+                <option>3ª+ recargas</option><option>Misto</option>
+              </select>
+            </div>
+          </div>
+          <div><label>Notas gerais</label>
+            <textarea id="f_obs" placeholder="Observações técnicas, notas de segurança..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-back"  onclick="showView('dashboard')">← Voltar</button>
+        <button class="btn btn-clear" onclick="clearVel()">Limpar Velocidades</button>
+        <button class="btn btn-calc"  onclick="calcAll()">⚡ Calcular</button>
+        <button class="btn btn-excel" onclick="exportExcel()">📊 Excel</button>
+        <button class="btn btn-save"  onclick="saveSession()">💾 Salvar Sessão</button>
+      </div>
+
+      <div class="app-footer">
+        <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a> · Confirme sempre com o manual do fabricante
+      </div>
+
+    </div><!-- /container -->
+  </div><!-- /view-form -->
+
+</div><!-- /app -->
+
+<!-- PROFILE MODAL -->
+<div class="modal-overlay" id="modal-profile">
+  <div class="modal-box">
+    <div class="modal-title">
+      👤 Meu Perfil
+      <button class="modal-close" onclick="closeProfile()">✕</button>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label>Nome completo</label>
+      <input type="text" id="p_name" placeholder="Seu nome">
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div><label>Idade</label><input type="number" id="p_age" min="14" max="99"></div>
+      <div><label>E-mail</label><input type="text" id="p_email" disabled style="opacity:.5"></div>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label>Tempo de prática</label>
+      <select id="p_exp">
+        <option value="">— selecione —</option>
+        <option>Menos de 1 ano</option><option>1 a 3 anos</option>
+        <option>3 a 5 anos</option><option>5 a 10 anos</option>
+        <option>Mais de 10 anos</option><option>Instrutor / profissional</option>
+      </select>
+    </div>
+    <div class="fg" style="margin-bottom:12px">
+      <label>Como conheceu a ferramenta</label>
+      <select id="p_how">
+        <option value="">— selecione —</option>
+        <option>Instagram @ale308win</option><option>Indicação de amigo</option>
+        <option>YouTube</option><option>Google / internet</option>
+        <option>Clube de tiro</option><option>Curso de recarga @ale308win</option><option>Outro</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px">
+      <input type="checkbox" id="p_insta" style="width:15px;height:15px;accent-color:var(--gold)">
+      <label style="font-size:12px;color:var(--text2);font-weight:400;letter-spacing:0;text-transform:none">Sigo <a href="https://www.instagram.com/ale308win" target="_blank">@ale308win</a> no Instagram</label>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-back" onclick="closeProfile()">Cancelar</button>
+      <button class="btn btn-save" onclick="saveProfile()">Salvar Perfil</button>
+    </div>
+    <div class="msg" id="msg-profile" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRM MODAL -->
+<div class="modal-overlay" id="modal-del">
+  <div class="modal-box" style="max-width:360px">
+    <div class="modal-title">🗑 Excluir sessão<button class="modal-close" onclick="closeDelModal()">✕</button></div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.5">
+      Esta sessão será excluída permanentemente. Esta ação não pode ser desfeita.
+    </p>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-back" onclick="closeDelModal()">Cancelar</button>
+      <button class="btn btn-del" id="btn-del-confirm" onclick="confirmDelete()">Excluir</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   ⚙ CONFIGURAÇÃO — substitua pelos valores do
+   seu projeto em supabase.com → Settings → API
+══════════════════════════════════════════════════ */
+const SUPA_URL = 'https://retjrajrouanbjzjbyxv.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJldGpyYWpyb3VhbmJqempieXh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE1NDczNDEsImV4cCI6MjA5NzEyMzM0MX0.RTUkvrUy-7RhOvtMOPq-BY5vswUOwqtyZuaR1XagDuE';
+
+const { createClient } = supabase;
+const sb = createClient(SUPA_URL, SUPA_KEY);
+
+/* ══════════════════════════════════════════
+   STATE
+══════════════════════════════════════════ */
+let currentUser    = null;
+let currentProfile = null;
+let allSessions    = [];
+let editingId      = null;   // uuid da sessão em edição, null = nova
+let pendingDelId   = null;
+
+/* ══════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════ */
+async function checkAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { window.location.href = 'index.html'; return false; }
+  currentUser = session.user;
+  document.getElementById('h-user-name').textContent = session.user.email;
+  await loadProfile();
+  return true;
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  window.location.href = 'index.html';
+}
+
+/* ══════════════════════════════════════════
+   NAVIGATION
+══════════════════════════════════════════ */
+function showView(view) {
+  document.getElementById('view-dashboard').style.display = view === 'dashboard' ? '' : 'none';
+  document.getElementById('view-form').style.display      = view === 'form'      ? '' : 'none';
+  document.getElementById('nav-dash').classList.toggle('active', view === 'dashboard');
+  if (view === 'dashboard') loadSessions();
+}
+
+function newSession() {
+  editingId = null;
+  clearForm();
+  document.getElementById('form-bar-title').textContent = 'Nova Sessão';
+  document.getElementById('form-bar-sub').textContent   = 'Preencha os dados e clique em Salvar';
+  showView('form');
+  window.scrollTo(0,0);
+}
+
+/* ══════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════ */
+async function loadSessions() {
+  const { data, error } = await sb
+    .from('sessions')
+    .select('id,session_date,caliber,city,state,club,weapon_type,shooter_name,session_data,created_at')
+    .order('session_date', { ascending: false, nullsFirst: false });
+
+  if (error) { toast('Erro ao carregar sessões: ' + error.message, true); return; }
+  allSessions = data || [];
+  renderSessions(allSessions);
+}
+
+function renderSessions(sessions) {
+  const grid  = document.getElementById('session-grid');
+  const count = document.getElementById('session-count');
+  count.textContent = sessions.length
+    ? `${sessions.length} sessão${sessions.length > 1 ? 'ões' : ''} encontrada${sessions.length > 1 ? 's' : ''}`
+    : '';
+
+  if (!sessions.length) {
+    grid.innerHTML = `
+      <div class="dash-empty" style="grid-column:1/-1">
+        <div class="dash-empty-icon">🎯</div>
+        <div class="dash-empty-title">Nenhuma sessão registrada</div>
+        <div class="dash-empty-sub">Clique em <strong>+ Nova Sessão</strong> para registrar seus dados de cronógrafo.</div>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = sessions.map(s => {
+    const d    = s.session_data || {};
+    const res  = d.results || {};
+    const date = s.session_date ? formatDateBR(s.session_date) : '—';
+    const loc  = [s.city, s.state].filter(Boolean).join(', ') || '—';
+    const club = s.club || '';
+
+    // Best SD
+    let bestSD = null, bestSDCls = '';
+    for (let i = 1; i <= 4; i++) {
+      const r = res[`s${i}`];
+      if (r && r.n >= 3 && (bestSD === null || r.sd < bestSD)) { bestSD = r.sd; }
+    }
+    if (bestSD !== null) {
+      const [cls] = sdBadge(bestSD);
+      bestSDCls = `<span class="badge ${cls}">SD ${bestSD.toFixed(1)} fps</span>`;
+    }
+
+    // Loads with data
+    const loadsN = [1,2,3,4].filter(i => (res[`s${i}`]?.n || 0) > 0).length;
+    const loadsStr = loadsN ? `${loadsN} carga${loadsN > 1 ? 's' : ''} testada${loadsN > 1 ? 's' : ''}` : 'Sem dados de velocidade';
+
+    return `
+      <div class="session-card">
+        <div class="sc-cal">${s.caliber || '—'}</div>
+        <div class="sc-meta">
+          <strong>${date}</strong> · ${s.weapon_type || '—'}<br>
+          📍 ${loc}${club ? ' · ' + club : ''}
+        </div>
+        <div class="sc-badge">
+          ${bestSDCls}
+          <span style="font-size:11px;color:var(--text2)">${loadsStr}</span>
+        </div>
+        <div class="sc-actions">
+          <button class="sc-btn edit" onclick="editSession('${s.id}')">✏ Editar</button>
+          <button class="sc-btn del"  onclick="askDelete('${s.id}')">🗑 Excluir</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* Search / Filter */
+function filterSessions() {
+  const cal   = document.getElementById('s_cal').value.toLowerCase().trim();
+  const from  = document.getElementById('s_from').value;
+  const to    = document.getElementById('s_to').value;
+  const state = document.getElementById('s_state').value;
+
+  const filtered = allSessions.filter(s => {
+    if (cal   && !(s.caliber || '').toLowerCase().includes(cal)) return false;
+    if (from  && s.session_date && s.session_date < from) return false;
+    if (to    && s.session_date && s.session_date > to)   return false;
+    if (state && s.state !== state) return false;
+    return true;
+  });
+  renderSessions(filtered);
+}
+
+function clearSearch() {
+  document.getElementById('s_cal').value   = '';
+  document.getElementById('s_from').value  = '';
+  document.getElementById('s_to').value    = '';
+  document.getElementById('s_state').value = '';
+  renderSessions(allSessions);
+}
+
+/* Edit */
+async function editSession(id) {
+  const { data, error } = await sb.from('sessions').select('*').eq('id', id).single();
+  if (error || !data) { toast('Sessão não encontrada.', true); return; }
+  editingId = id;
+  const cal  = data.caliber  || '—';
+  const date = data.session_date ? formatDateBR(data.session_date) : '—';
+  document.getElementById('form-bar-title').textContent = `Editando — ${cal} / ${date}`;
+  document.getElementById('form-bar-sub').textContent   = 'Atualize os dados e clique em Salvar';
+  clearForm();
+  populateForm(data.session_data || {});
+  showView('form');
+  window.scrollTo(0,0);
+}
+
+/* Delete */
+function askDelete(id) {
+  pendingDelId = id;
+  document.getElementById('modal-del').classList.add('show');
+}
+function closeDelModal() {
+  pendingDelId = null;
+  document.getElementById('modal-del').classList.remove('show');
+}
+async function confirmDelete() {
+  if (!pendingDelId) return;
+  const { error } = await sb.from('sessions').delete().eq('id', pendingDelId);
+  closeDelModal();
+  if (error) { toast('Erro ao excluir: ' + error.message, true); return; }
+  toast('Sessão excluída.');
+  allSessions = allSessions.filter(s => s.id !== pendingDelId);
+  renderSessions(allSessions);
+}
+
+/* ══════════════════════════════════════════
+   SAVE / LOAD FORM
+══════════════════════════════════════════ */
+function collectFormData() {
+  const vels = {}, comps = {};
+  for (let s = 1; s <= 4; s++) {
+    vels[`s${s}`] = [];
+    for (let i = 1; i <= 10; i++) {
+      const el = document.getElementById(`v${s}_${i}`);
+      if (el && el.value !== '' && !isNaN(+el.value) && +el.value > 0)
+        vels[`s${s}`].push(+el.value);
+    }
+  }
+  COMP_ROWS.forEach(r => {
+    for (let s = 1; s <= 4; s++)
+      comps[`c${s}_${r.id}`] = fv(`c${s}_${r.id}`);
+  });
+  // Compute results for dashboard display
+  const results = {};
+  for (let s = 1; s <= 4; s++) {
+    const v = vels[`s${s}`];
+    if (v.length) {
+      const A = avg(v), SD = sdCalc(v), ES = hiV(v) - loV(v);
+      results[`s${s}`] = { n: v.length, avg: Math.round(A), sd: +SD.toFixed(1), es: ES, esp: +(ES/A*100).toFixed(2) };
+    }
+  }
+  return {
+    identification: { data: fv('f_data'), atirador: fv('f_atirador'), calibre: fv('f_calibre'), distancia: fv('f_distancia') },
+    equipment: {
+      tipo: fv('f_tipo'), modelo: fv('f_modelo'), fab: fv('f_fab'), cano: fv('f_cano'), crono: fv('f_crono'),
+      clima: fv('f_clima'), temp: fv('f_temp'), umid: fv('f_umid'), alt: fv('f_alt'), vento: fv('f_vento'),
+      cidade: fv('f_cidade'), estado: fv('f_estado'), clube: fv('f_clube'),
+      sobre: fv('f_sobre'), extra: fv('f_extra'),
+    },
+    components: comps,
+    velocities: vels,
+    results,
+    observations: { prensa: fv('f_prensa'), dies: fv('f_dies'), redim: fv('f_redim'), econd: fv('f_econd'), obs: fv('f_obs') },
+  };
+}
+
+function populateForm(d) {
+  const id = d.identification || {}, eq = d.equipment || {}, ob = d.observations || {};
+  setVal('f_data',     id.data);
+  setVal('f_atirador', id.atirador);
+  setVal('f_calibre',  id.calibre);
+  setVal('f_distancia',id.distancia);
+  setVal('f_tipo',     eq.tipo);
+  setVal('f_modelo',   eq.modelo);
+  setVal('f_fab',      eq.fab);
+  setVal('f_cano',     eq.cano);
+  setVal('f_crono',    eq.crono);
+  setVal('f_clima',    eq.clima);
+  setVal('f_temp',     eq.temp);
+  setVal('f_umid',     eq.umid);
+  setVal('f_alt',      eq.alt);
+  setVal('f_vento',    eq.vento);
+  setVal('f_cidade',   eq.cidade);
+  setVal('f_estado',   eq.estado);
+  setVal('f_clube',    eq.clube);
+  setVal('f_sobre',    eq.sobre);
+  setVal('f_extra',    eq.extra);
+  setVal('f_prensa',   ob.prensa);
+  setVal('f_dies',     ob.dies);
+  setVal('f_redim',    ob.redim);
+  setVal('f_econd',    ob.econd);
+  setVal('f_obs',      ob.obs);
+  // Components
+  const comps = d.components || {};
+  COMP_ROWS.forEach(r => {
+    for (let s = 1; s <= 4; s++)
+      setVal(`c${s}_${r.id}`, comps[`c${s}_${r.id}`]);
+  });
+  // Velocities
+  const vels = d.velocities || {};
+  for (let s = 1; s <= 4; s++) {
+    (vels[`s${s}`] || []).forEach((v, i) => setVal(`v${s}_${i+1}`, v));
+  }
+  calcAll();
+}
+
+async function saveSession() {
+  const formData = collectFormData();
+  const stateStr = formData.equipment.estado || '';
+  const stateCode = stateStr.split(' — ')[0].trim();
+
+  const payload = {
+    user_id:      currentUser.id,
+    session_date: dateBRtoISO(formData.identification.data),
+    caliber:      formData.identification.calibre   || null,
+    city:         formData.equipment.cidade         || null,
+    state:        stateCode                         || null,
+    club:         formData.equipment.clube          || null,
+    weapon_type:  formData.equipment.tipo           || null,
+    shooter_name: formData.identification.atirador  || null,
+    session_data: formData,
+  };
+
+  let error;
+  if (editingId) {
+    ({ error } = await sb.from('sessions').update(payload).eq('id', editingId));
+  } else {
+    ({ error } = await sb.from('sessions').insert(payload));
+  }
+
+  if (error) { toast('Erro ao salvar: ' + error.message, true); return; }
+  toast(editingId ? 'Sessão atualizada!' : 'Sessão salva com sucesso!');
+  editingId = null;
+  showView('dashboard');
+}
+
+/* ══════════════════════════════════════════
+   PROFILE
+══════════════════════════════════════════ */
+async function loadProfile() {
+  const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+  currentProfile = data;
+  if (data && data.name) document.getElementById('h-user-name').textContent = data.name;
+}
+
+function openProfile() {
+  const p = currentProfile || {};
+  setVal('p_name',  p.name);
+  setVal('p_age',   p.age);
+  setVal('p_email', currentUser.email);
+  setVal('p_exp',   p.experience);
+  setVal('p_how',   p.how_found);
+  document.getElementById('p_insta').checked = !!p.follows_instagram;
+  document.getElementById('msg-profile').className = 'msg';
+  document.getElementById('modal-profile').classList.add('show');
+}
+
+function closeProfile() {
+  document.getElementById('modal-profile').classList.remove('show');
+}
+
+async function saveProfile() {
+  const name  = document.getElementById('p_name').value.trim();
+  const age   = document.getElementById('p_age').value;
+  const exp   = document.getElementById('p_exp').value;
+  const how   = document.getElementById('p_how').value;
+  const insta = document.getElementById('p_insta').checked;
+
+  if (!name) {
+    const el = document.getElementById('msg-profile');
+    el.className = 'msg err show'; el.textContent = 'Nome é obrigatório.'; return;
+  }
+
+  const { error } = await sb.from('profiles').update({
+    name, age: age ? parseInt(age) : null,
+    experience: exp || null, how_found: how || null, follows_instagram: insta,
+  }).eq('id', currentUser.id);
+
+  if (error) {
+    const el = document.getElementById('msg-profile');
+    el.className = 'msg err show'; el.textContent = error.message; return;
+  }
+  currentProfile = { ...currentProfile, name, age: parseInt(age)||null, experience: exp, how_found: how, follows_instagram: insta };
+  document.getElementById('h-user-name').textContent = name;
+  toast('Perfil salvo!');
+  closeProfile();
+}
+
+/* ══════════════════════════════════════════
+   COMPONENT ROWS
+══════════════════════════════════════════ */
+const ESPOLETA_OPTS = [
+  '1½ — Small Pistol','2½ — Large Pistol','5½ — Small Pistol Magnum',
+  '7½ — Small Rifle','9½ — Large Rifle','209 — Shotshell',
+];
+const COMP_ROWS = [
+  { id:'proj_fab',  lbl:'Fabricante do Projétil',  type:'text' },
+  { id:'proj_tipo', lbl:'Tipo do Projétil',         type:'text' },
+  { id:'proj_peso', lbl:'Peso do Projétil (gr)',    type:'number' },
+  { id:'estojo',    lbl:'Estojo',                   type:'text' },
+  { id:'oal',       lbl:'OAL (pol.)',               type:'text' },
+  { id:'caselen',   lbl:'Case Length (pol.)',        type:'text' },
+  { id:'espoleta',  lbl:'Espoleta',                 type:'select', opts: ESPOLETA_OPTS },
+  { id:'polvora',   lbl:'Pólvora / Lote',           type:'text' },
+  { id:'carga',     lbl:'Carga (grains)',            type:'number' },
+];
+
+function cellFor(r, s) {
+  if (r.type === 'select')
+    return `<select id="c${s}_${r.id}"><option value="">—</option>${r.opts.map(o=>`<option>${o}</option>`).join('')}</select>`;
+  return `<input type="${r.type||'text'}" id="c${s}_${r.id}" placeholder="C${s}">`;
+}
+
+function buildComponents() {
+  document.getElementById('loads-rows').innerHTML = COMP_ROWS.map(r => `
+    <div class="loads-row" style="border-top:1px solid var(--border)">
+      <div>${r.lbl}</div>
+      <div>${cellFor(r,1)}</div><div>${cellFor(r,2)}</div>
+      <div>${cellFor(r,3)}</div><div>${cellFor(r,4)}</div>
+    </div>`).join('');
+}
+
+function buildVelGrid() {
+  let h = '';
+  for (let i = 1; i <= 10; i++) {
+    h += `<div class="vel-lbl">Sessão ${i}</div>`;
+    for (let s = 1; s <= 4; s++)
+      h += `<div class="vel-cell"><input type="number" id="v${s}_${i}" placeholder="—" min="0" max="6000" oninput="calcAll()"><span>fps</span></div>`;
+  }
+  document.getElementById('vel-grid').innerHTML = h;
+}
+
+function clearForm() {
+  const fields = ['f_data','f_atirador','f_calibre','f_distancia','f_tipo','f_modelo','f_fab','f_cano','f_crono',
+    'f_clima','f_temp','f_umid','f_alt','f_vento','f_cidade','f_estado','f_clube','f_sobre','f_extra',
+    'f_prensa','f_dies','f_redim','f_econd','f_obs'];
+  fields.forEach(id => setVal(id, ''));
+  COMP_ROWS.forEach(r => { for (let s=1;s<=4;s++) setVal(`c${s}_${r.id}`, ''); });
+  clearVel();
+}
+
+/* ══════════════════════════════════════════
+   MATH
+══════════════════════════════════════════ */
+function getVels(s) {
+  const v = [];
+  for (let i = 1; i <= 10; i++) {
+    const el = document.getElementById(`v${s}_${i}`);
+    if (el && el.value !== '' && !isNaN(+el.value) && +el.value > 0) v.push(+el.value);
+  }
+  return v;
+}
+const avg  = a => a.reduce((s,x)=>s+x,0)/a.length;
+const hiV  = a => Math.max(...a);
+const loV  = a => Math.min(...a);
+function sdCalc(a) {
+  if (a.length < 2) return 0;
+  const m = avg(a);
+  return Math.sqrt(a.reduce((s,x)=>s+Math.pow(x-m,2),0)/(a.length-1));
+}
+const fps2ms = f => f*0.3048;
+const gr2kg  = g => g*0.00006479891;
+function calcE(avgFps, grains) {
+  if (!grains||isNaN(+grains)||+grains<=0) return null;
+  const v=fps2ms(avgFps), m=gr2kg(+grains);
+  return 0.5*m*v*v;
+}
+
+/* Badge helpers */
+function sdBadge(v)    { return v<10?['bg-ex','Excelente']:v<15?['bg-go','Bom']:v<25?['bg-ac','Aceitável']:v<35?['bg-po','Ruim']:['bg-cr','Crítico'] }
+function esPctBadge(v) { return v<1?['bg-ex','Excelente']:v<1.5?['bg-go','Bom']:v<2.5?['bg-ac','Aceitável']:v<3.5?['bg-po','Ruim']:['bg-cr','Crítico'] }
+function esBadge(v)    { return v<25?['bg-ex','Excelente']:v<40?['bg-go','Bom']:v<70?['bg-ac','Aceitável']:v<100?['bg-po','Ruim']:['bg-cr','Crítico'] }
+const bdg = (cls,lbl) => `<span class="badge ${cls}">${lbl}</span>`;
+
+function renderSerie(s, vals, grains) {
+  const set = (id,html) => { const el=document.getElementById(id); if(el) el.innerHTML=html; };
+  if (!vals.length) { ['v','avg','ms','hi','lo','es','esp','sd','e'].forEach(k=>set(`r${s}_${k}`,'—')); return; }
+  const H=hiV(vals),L=loV(vals),A=avg(vals),SD=sdCalc(vals),ES=H-L,ESP=ES/A*100;
+  const E=calcE(A,document.getElementById(`c${s}_proj_peso`)?.value);
+  set(`r${s}_v`,   `<span style="font-size:18px">${vals.length}</span>`);
+  set(`r${s}_avg`, `<span style="font-size:18px">${Math.round(A)}</span><span class="unit">fps</span>`);
+  set(`r${s}_ms`,  `${fps2ms(A).toFixed(1)}<span class="unit">m/s</span>`);
+  set(`r${s}_hi`,  `${H}<span class="unit">fps</span>`);
+  set(`r${s}_lo`,  `${L}<span class="unit">fps</span>`);
+  const esB=esBadge(ES);
+  set(`r${s}_es`,  `${ES}<span class="unit">fps</span> ${bdg(esB[0],esB[1])}`);
+  const espB=esPctBadge(ESP);
+  set(`r${s}_esp`, `${ESP.toFixed(2)}% ${bdg(espB[0],espB[1])}`);
+  const sdB=sdBadge(SD);
+  set(`r${s}_sd`,  `${SD.toFixed(1)}<span class="unit">fps</span> ${bdg(sdB[0],sdB[1])}`);
+  set(`r${s}_e`,   E!==null ? `<span style="font-size:16px">${Math.round(E)}</span><span class="unit">J</span>` : '<span style="font-size:10px;color:var(--text2)">informar peso</span>');
+}
+
+function calcAll() {
+  for (let s=1;s<=4;s++) renderSerie(s, getVels(s));
+  const sob = fv('f_sobre'), ext = fv('f_extra');
+  const al = [];
+  if (sob && sob !== 'NÃO') al.push(`Marcas na espoleta (${sob}).`);
+  if (ext && ext !== 'NÃO') al.push(`Dificuldade na extração (${ext}).`);
+  const box = document.getElementById('alert_sobre');
+  document.getElementById('alert_txt').innerHTML = al.join(' ') + (al.length ? ' <strong>Reduza a carga em 10% e refaça.</strong>' : '');
+  box.style.display = al.length ? 'block' : 'none';
+}
+
+function clearVel() {
+  for (let s=1;s<=4;s++) for (let i=1;i<=10;i++) { const el=document.getElementById(`v${s}_${i}`); if(el) el.value=''; }
+  calcAll();
+}
+
+/* ══════════════════════════════════════════
+   EXCEL EXPORT
+══════════════════════════════════════════ */
+function exportExcel() {
+  if (typeof XLSX === 'undefined') { toast('XLSX não carregado. Verifique sua conexão.', true); return; }
+  const ST = {
+    title:{font:{bold:true,sz:16,color:{rgb:'C09A3A'},name:'Calibri'},fill:{fgColor:{rgb:'0B0B0F'}},alignment:{horizontal:'center'}},
+    sec:{font:{bold:true,sz:12,color:{rgb:'C09A3A'},name:'Calibri'},fill:{fgColor:{rgb:'161622'}},border:{bottom:{style:'medium',color:{rgb:'8B7332'}}}},
+    hdr:{font:{bold:true,sz:10,color:{rgb:'FFFFFF'},name:'Calibri'},fill:{fgColor:{rgb:'1E1E2E'}},alignment:{horizontal:'center'}},
+    key:{font:{bold:true,sz:10,color:{rgb:'AAAAAA'},name:'Calibri'},fill:{fgColor:{rgb:'13131A'}},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
+    val:{font:{sz:10,name:'Calibri'},fill:{fgColor:{rgb:'0E0E18'}},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
+    num:{font:{bold:true,sz:13,color:{rgb:'D4B050'},name:'Calibri'},fill:{fgColor:{rgb:'0E0E18'}},alignment:{horizontal:'center'},border:{bottom:{style:'thin',color:{rgb:'2A2A3A'}}}},
+    ex:{font:{bold:true,sz:10,color:{rgb:'81C784'},name:'Calibri'},fill:{fgColor:{rgb:'162016'}},alignment:{horizontal:'center'}},
+    go:{font:{bold:true,sz:10,color:{rgb:'AED581'},name:'Calibri'},fill:{fgColor:{rgb:'1A2210'}},alignment:{horizontal:'center'}},
+    ac:{font:{bold:true,sz:10,color:{rgb:'FFD54F'},name:'Calibri'},fill:{fgColor:{rgb:'1F1B07'}},alignment:{horizontal:'center'}},
+    po:{font:{bold:true,sz:10,color:{rgb:'FFB74D'},name:'Calibri'},fill:{fgColor:{rgb:'1F1007'}},alignment:{horizontal:'center'}},
+    cr:{font:{bold:true,sz:10,color:{rgb:'EF9A9A'},name:'Calibri'},fill:{fgColor:{rgb:'200808'}},alignment:{horizontal:'center'}},
+  };
+  const c = (v,s) => ({v:v,t:'s',s:s||{}}), n = (v,s) => ({v:v||0,t:'n',s:s||ST.num});
+  const rows = [];
+  const R = (...cells) => rows.push(cells);
+  const B = () => rows.push([]);
+
+  R(c('REGISTRO E ANÁLISE DE DADOS DE CRONÓGRAFO',ST.title));
+  R(c('@ale308win — instagram.com/ale308win',{font:{sz:10,color:{rgb:'888880'},name:'Calibri'},fill:{fgColor:{rgb:'0B0B0F'}},alignment:{horizontal:'center'}}));
+  B();
+  R(c('IDENTIFICAÇÃO',ST.sec));
+  R(c('Data',ST.key),c(fv('f_data'),ST.val),c('Atirador',ST.key),c(fv('f_atirador'),ST.val));
+  R(c('Calibre',ST.key),c(fv('f_calibre'),ST.val),c('Distância ao Crono',ST.key),c(fv('f_distancia'),ST.val));
+  B();
+  R(c('EQUIPAMENTO & CONDIÇÕES',ST.sec));
+  R(c('Tipo',ST.key),c(fv('f_tipo'),ST.val),c('Modelo',ST.key),c(fv('f_modelo'),ST.val));
+  R(c('Clima',ST.key),c(fv('f_clima'),ST.val),c('Temperatura',ST.key),c(fv('f_temp'),ST.val));
+  R(c('Cidade',ST.key),c(fv('f_cidade'),ST.val),c('Estado',ST.key),c(fv('f_estado'),ST.val));
+  R(c('Clube',ST.key),c(fv('f_clube'),ST.val));
+  B();
+  R(c('COMPONENTES',ST.sec));
+  R(c('Componente',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
+  COMP_ROWS.forEach(r => R(c(r.lbl,ST.key),c(fv(`c1_${r.id}`),ST.val),c(fv(`c2_${r.id}`),ST.val),c(fv(`c3_${r.id}`),ST.val),c(fv(`c4_${r.id}`),ST.val)));
+  B();
+  R(c('VELOCIDADES (fps)',ST.sec));
+  R(c('Sessão',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
+  for (let i=1;i<=10;i++) {
+    const cells=[c(`Sessão ${i}`,ST.key)];
+    for (let s=1;s<=4;s++) { const el=document.getElementById(`v${s}_${i}`); cells.push(el&&el.value?n(+el.value):c('—',ST.val)); }
+    rows.push(cells);
+  }
+  B();
+  R(c('RESULTADOS',ST.sec));
+  R(c('Métrica',ST.hdr),c('CARGA 1',ST.hdr),c('CARGA 2',ST.hdr),c('CARGA 3',ST.hdr),c('CARGA 4',ST.hdr));
+  const SR = [];
+  for (let s=1;s<=4;s++) { const v=getVels(s),g=fv(`c${s}_proj_peso`); if(v.length){const A=avg(v),SD=sdCalc(v),ES=hiV(v)-loV(v),ESP=ES/A*100,E=calcE(A,g); SR[s]={n:v.length,A:Math.round(A),ms:+fps2ms(A).toFixed(1),H:hiV(v),L:loV(v),ES,ESP:+ESP.toFixed(2),SD:+SD.toFixed(1),E:E!==null?Math.round(E):'',sdB:sdBadge(SD),espB:esPctBadge(ESP),esB:esBadge(ES)};}else SR[s]=null;}
+  const nv = s => SR[s]?n(SR[s].n):c('—',ST.val);
+  R(c('Válidos (n)',ST.key),nv(1),nv(2),nv(3),nv(4));
+  (['A','ms','H','L','ES','ESP','SD']).forEach(k => { const lk={A:'AVG (fps)',ms:'AVG (m/s)',H:'HI (fps)',L:'LO (fps)',ES:'ES (fps)',ESP:'ES%',SD:'SD (fps)'}[k]; rows.push([c(lk,ST.key),...[1,2,3,4].map(s=>SR[s]?n(SR[s][k]):c('—',ST.val))]); });
+  // SD rating row
+  rows.push([c('SD Classificação',ST.key),...[1,2,3,4].map(s=>SR[s]?c(SR[s].sdB[1],ST[SR[s].sdB[0].replace('bg-','')]):c('—',ST.val))]);
+  rows.push([c('Energia (J)',ST.key),...[1,2,3,4].map(s=>SR[s]&&SR[s].E!==''?n(SR[s].E):c('—',ST.val))]);
+  B();
+  R(c('OBSERVAÇÕES',ST.sec));
+  R(c('Prensa',ST.key),c(fv('f_prensa'),ST.val),c('Dies',ST.key),c(fv('f_dies'),ST.val));
+  R(c('Notas',ST.key),c(fv('f_obs'),{...ST.val,alignment:{wrapText:true}}));
+  B();
+  R(c('⚠ Dados de referência. Confirme com o manual do fabricante. Responsabilidade exclusiva do recarregador. @ale308win',{font:{italic:true,sz:9,color:{rgb:'888880'},name:'Calibri'},fill:{fgColor:{rgb:'0D0D14'}},alignment:{wrapText:true}}));
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:26},{wch:14},{wch:14},{wch:14},{wch:14}];
+  ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}},{s:{r:1,c:0},e:{r:1,c:4}}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Registro');
+  const atirador = (fv('f_atirador')||'registro').replace(/\s+/g,'_');
+  const data = (fv('f_data')||new Date().toLocaleDateString('pt-BR')).replace(/\//g,'-');
+  XLSX.writeFile(wb, `cronografo_${atirador}_${data}.xlsx`);
+}
+
+/* ══════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════ */
+const fv = id => { const e=document.getElementById(id); return e?e.value:''; };
+const setVal = (id, val) => {
+  const e = document.getElementById(id);
+  if (!e) return;
+  e.value = (val !== undefined && val !== null) ? val : '';
+};
+function dateBRtoISO(br) {
+  if (!br || !br.includes('/')) return null;
+  const [d,m,y] = br.split('/');
+  if (!d||!m||!y||y.length!==4) return null;
+  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+}
+function formatDateBR(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+let toastTimer = null;
+function toast(msg, isErr=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (isErr?' err':'');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>{ t.className=''; }, 3000);
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+(async () => {
+  const ok = await checkAuth();
+  if (!ok) return;
+  buildComponents();
+  buildVelGrid();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  await loadSessions();
+  showView('dashboard');
+  document.addEventListener('input', e => {
+    if (e.target && /c[1-4]_proj_peso/.test(e.target.id)) calcAll();
+  });
+})();
+</script>
+</body>
+</html>
